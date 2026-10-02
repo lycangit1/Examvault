@@ -8,7 +8,7 @@ We built ExamVault: the Zero-Trust Examination Lifecycle Gateway.
 ⚡ SHA-256 Tamper-Evident Ledger
 🎯 Sub-3-Second Forensic OCR Traceability
 
-Built with ❤️ by Team Ataraxia for Smart India Hackathon 2026. #SIH2026 #CyberSecurity #ZeroTrust
+Built with ❤️ by Team Stoic Ataraxia for Smart India Hackathon 2026. #SIH2026 #CyberSecurity #ZeroTrust
 
 ---
 

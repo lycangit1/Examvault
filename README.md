@@ -1,7 +1,7 @@
 # ExamVault — Secure Examination-Content Lifecycle Platform
 
 **Version:** 1.0.0 (SIH MVP)  
-**Team:** ATARAXIA  
+**Team:** STOIC ATARAXIA  
 **Build Environment:** Antigravity  
 **Application Type:** Secure Web Application  
 

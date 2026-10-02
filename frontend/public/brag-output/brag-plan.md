@@ -18,7 +18,7 @@ Accompanied by a heavy cinematic bass impact.
 
 ## 5. Outro / punchline
 `"EXAMVAULT. ZERO TRUST. ZERO LEAKS. TOTAL ACCOUNTABILITY."`
-Team Ataraxia • Smart India Hackathon 2026.
+Team Stoic Ataraxia • Smart India Hackathon 2026.
 
 ## 6. User flow worth showing
 `Question Creation (Encrypted) → 2-Man Cryptographic Lock → Tamper-Evident Ledger → Forensic OCR Leak Match in <3s.`
