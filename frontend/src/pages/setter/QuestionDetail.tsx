@@ -9,7 +9,7 @@ import { WatermarkOverlay } from '../../components/common/WatermarkOverlay';
 
 export const QuestionDetail: React.FC = () => {
   const { questionId } = useParams<{ questionId: string }>();
-  const { user, session } = useAuth();
+  const { user, session, recordQuestionView } = useAuth();
 
   const [question, setQuestion] = useState<Question | null>(null);
   const [versions, setVersions] = useState<QuestionVersion[]>([]);
@@ -26,7 +26,7 @@ export const QuestionDetail: React.FC = () => {
         .from('questions')
         .select('*')
         .eq('id', questionId)
-        .single();
+        .maybeSingle();
       if (qData) setQuestion(qData as Question);
 
       const { data: vData } = await supabase
@@ -44,10 +44,7 @@ export const QuestionDetail: React.FC = () => {
       if (rData) setReviews(rData as Review[]);
 
       if (session?.id && questionId) {
-        await supabase.rpc('record_question_view', {
-          p_question_id: questionId,
-          p_session_id: session.id,
-        });
+        await recordQuestionView(questionId);
       }
     } catch (err) {
       console.error('Failed to load question details:', err);

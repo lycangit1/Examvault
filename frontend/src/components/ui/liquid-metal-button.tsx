@@ -102,6 +102,9 @@ export function LiquidMetalButton({
     }
 
     const loadShader = async () => {
+      // Small buttons (like top role switcher pills) use CSS metallic shader to avoid WebGL context limits
+      if (size === "sm") return;
+
       try {
         if (shaderRef.current) {
           if (shaderMount.current?.destroy) {

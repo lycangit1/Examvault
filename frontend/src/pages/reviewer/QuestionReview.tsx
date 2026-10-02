@@ -8,9 +8,11 @@ import { WatermarkOverlay } from '../../components/common/WatermarkOverlay';
 import { QuestionStatusBadge } from '../../components/common/Badge';
 import { getFingerprintedOptions } from '../../lib/fingerprint';
 
+import { INITIAL_SEED_QUESTIONS } from '../../lib/mockData';
+
 export const QuestionReview: React.FC = () => {
   const { questionId } = useParams<{ questionId: string }>();
-  const { user, session } = useAuth();
+  const { user, session, recordQuestionView } = useAuth();
   const navigate = useNavigate();
 
   const [question, setQuestion] = useState<Question | null>(null);
@@ -28,19 +30,31 @@ export const QuestionReview: React.FC = () => {
           .from('questions')
           .select('*')
           .eq('id', questionId)
-          .single();
+          .maybeSingle();
 
         if (data && !error) {
           setQuestion(data as Question);
-          if (session?.id) {
-            await supabase.rpc('record_question_view', {
-              p_question_id: questionId,
-              p_session_id: session.id,
-            });
+        } else {
+          const fallbackQ = INITIAL_SEED_QUESTIONS.find(q => q.id === questionId);
+          if (fallbackQ) {
+            setQuestion(fallbackQ);
           }
         }
+
+        // Trigger tamper-evident audit log & velocity anomaly monitoring
+        if (session?.id) {
+          await recordQuestionView(questionId);
+        }
       } catch (err: any) {
-        setError(err.message || 'Failed to load question');
+        const fallbackQ = INITIAL_SEED_QUESTIONS.find(q => q.id === questionId);
+        if (fallbackQ) {
+          setQuestion(fallbackQ);
+          if (session?.id) {
+            await recordQuestionView(questionId);
+          }
+        } else {
+          setError(err.message || 'Failed to load question');
+        }
       } finally {
         setLoading(false);
       }

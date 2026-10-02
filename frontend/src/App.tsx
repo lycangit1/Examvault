@@ -37,7 +37,7 @@ const ProtectedRoute: React.FC<{
   allowedRoles?: AppRole[];
   children: React.ReactNode;
 }> = ({ allowedRoles, children }) => {
-  const { user, loading } = useAuth();
+  const { user, loading, lockdownState } = useAuth();
 
   if (loading) {
     return (
@@ -48,6 +48,11 @@ const ProtectedRoute: React.FC<{
   }
 
   if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  // Emergency lockdown guard: only INVESTIGATOR can view protected routes
+  if (lockdownState?.is_locked && user.role !== 'INVESTIGATOR') {
     return <Navigate to="/login" replace />;
   }
 

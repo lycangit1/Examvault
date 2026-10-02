@@ -31,6 +31,11 @@ export const Navbar: React.FC = () => {
   };
 
   const onRoleButtonClick = (targetRole: AppRole) => {
+    if (lockdownState?.is_locked && targetRole !== 'INVESTIGATOR') {
+      alert(`EMERGENCY SYSTEM LOCKDOWN ACTIVE: Non-investigator roles are restricted. Only Investigator clearance is authorized.`);
+      return;
+    }
+
     // If not logged in, go straight to login for that role
     if (!user) {
       handleRoleSwitch(targetRole);
@@ -99,13 +104,15 @@ export const Navbar: React.FC = () => {
         <div className="flex items-center gap-2 overflow-x-auto py-0.5">
           {(['SETTER', 'REVIEWER', 'APPROVER', 'ADMIN_2', 'INVESTIGATOR'] as AppRole[]).map((r) => {
             const isActive = user?.role === r;
+            const isRoleLocked = !!(lockdownState?.is_locked && r !== 'INVESTIGATOR');
             return (
               <LiquidMetalButton
                 key={r}
-                label={r.replace('_', ' ')}
+                label={isRoleLocked ? `🔒 ${r.replace('_', ' ')} (Locked)` : r.replace('_', ' ')}
                 size="sm"
                 theme={isActive ? "navy" : "silver"}
                 active={isActive}
+                disabled={isRoleLocked}
                 onClick={() => onRoleButtonClick(r)}
               />
             );

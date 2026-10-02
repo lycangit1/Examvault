@@ -6,11 +6,12 @@ import { useAuth } from '../../contexts/AuthContext';
 import { ExamPackage } from '../../types';
 import { PackageStatusBadge } from '../../components/common/Badge';
 import { GlowCard } from '../../components/ui/spotlight-card';
+import { INITIAL_SEED_PACKAGES } from '../../lib/mockData';
 
 export const Admin2Dashboard: React.FC = () => {
   const { user, session } = useAuth();
-  const [packages, setPackages] = useState<ExamPackage[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [packages, setPackages] = useState<ExamPackage[]>(INITIAL_SEED_PACKAGES);
+  const [loading, setLoading] = useState(false);
   const [processingId, setProcessingId] = useState<string | null>(null);
   const [rejectReason, setRejectReason] = useState('');
   const [selectedPkgForReject, setSelectedPkgForReject] = useState<string | null>(null);
@@ -20,14 +21,27 @@ export const Admin2Dashboard: React.FC = () => {
 
   const loadPackages = async () => {
     try {
-      setLoading(true);
       const { data } = await supabase
         .from('exam_packages')
         .select('*')
         .order('created_at', { ascending: false });
-      if (data) setPackages(data as ExamPackage[]);
+      if (data && data.length > 0) {
+        setPackages(data as ExamPackage[]);
+      } else {
+        const stored = localStorage.getItem('examvault_packages');
+        if (stored) {
+          try {
+            setPackages(JSON.parse(stored));
+          } catch {
+            setPackages(INITIAL_SEED_PACKAGES);
+          }
+        } else {
+          setPackages(INITIAL_SEED_PACKAGES);
+        }
+      }
     } catch (err) {
-      console.error('Failed to load dual control packages:', err);
+      console.error('Failed to load dual control packages, using seed data:', err);
+      setPackages(INITIAL_SEED_PACKAGES);
     } finally {
       setLoading(false);
     }

@@ -78,7 +78,11 @@ export const LoginPage: React.FC = () => {
   const handleQuickFill = (accEmail: string, accRole?: AppRole) => {
     setEmail(accEmail);
     setPassword('password123');
-    setError('');
+    if (lockdownState?.is_locked && accRole && accRole !== 'INVESTIGATOR') {
+      setError(`EMERGENCY LOCKDOWN ACTIVE: ${accRole.replace('_', ' ')} access is restricted. Only Investigator personnel can authenticate.`);
+    } else {
+      setError('');
+    }
     if (accRole) {
       setSearchParams({ role: accRole, email: accEmail }, { replace: true });
     }
@@ -87,6 +91,17 @@ export const LoginPage: React.FC = () => {
   const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+
+    const cleanEmail = email.trim().toLowerCase();
+    const isInvestigator = cleanEmail.includes('investigator');
+
+    if (lockdownState?.is_locked && !isInvestigator) {
+      setError(
+        `EMERGENCY SYSTEM LOCKDOWN ACTIVE: Non-investigator access is temporarily restricted. (${lockdownState.lockdown_reason || 'Security threat threshold exceeded'})`
+      );
+      return;
+    }
+
     setLoading(true);
 
     const res = await initiateLogin(email, password, deviceMode);
@@ -210,16 +225,23 @@ export const LoginPage: React.FC = () => {
                     onClick={() => handleQuickFill(acc.email, acc.role)}
                     className={`flex-shrink-0 inline-flex items-center px-3 py-1.5 border rounded-md text-xs font-medium transition-colors ${
                       isSelected
-                        ? 'border-[#00236f] bg-blue-50/60 text-[#00236f] font-semibold shadow-xs'
+                        ? isLockedOut
+                          ? 'border-red-400 bg-red-50 text-red-700 font-semibold shadow-xs'
+                          : 'border-[#00236f] bg-blue-50/60 text-[#00236f] font-semibold shadow-xs'
                         : isLockedOut
-                        ? 'border-slate-200 bg-slate-50 text-slate-400 opacity-60'
+                        ? 'border-red-200 bg-red-50/50 text-red-600 hover:bg-red-50 cursor-not-allowed'
                         : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
                     }`}
                   >
                     <span className="material-symbols-outlined text-[16px] mr-1.5 text-slate-500">
-                      {acc.icon}
+                      {isLockedOut ? 'lock' : acc.icon}
                     </span>
                     <span>{acc.name}</span>
+                    {isLockedOut && (
+                      <span className="ml-1.5 px-1 py-0.2 bg-red-200 text-red-800 text-[9px] font-bold rounded">
+                        LOCKED
+                      </span>
+                    )}
                   </button>
                 );
               })}
@@ -319,15 +341,26 @@ export const LoginPage: React.FC = () => {
               </div>
             </div>
 
-            <div className="pt-1">
-              <LiquidMetalButton
-                label={loading ? "Verifying Credentials..." : "Authenticate"}
-                type="submit"
-                theme="navy"
-                fullWidth={true}
-                disabled={loading}
-              />
-            </div>
+            {(() => {
+              const isCurrentLocked = !!(lockdownState?.is_locked && !email.trim().toLowerCase().includes('investigator'));
+              return (
+                <div className="pt-1">
+                  <LiquidMetalButton
+                    label={
+                      loading
+                        ? "Verifying Credentials..."
+                        : isCurrentLocked
+                        ? "🔒 Access Restricted (System Lockdown)"
+                        : "Authenticate"
+                    }
+                    type="submit"
+                    theme={isCurrentLocked ? "silver" : "navy"}
+                    fullWidth={true}
+                    disabled={loading || isCurrentLocked}
+                  />
+                </div>
+              );
+            })()}
           </form>
         </GlowCard>
 

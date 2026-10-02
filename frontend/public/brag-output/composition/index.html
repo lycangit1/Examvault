@@ -1,0 +1,1477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ExamVault — Official SIH 2026 Project Demo Video & Presentation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700;800&family=Outfit:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #030712;
+      --card-bg: rgba(15, 23, 42, 0.94);
+      --border-color: rgba(56, 189, 248, 0.25);
+      --accent-blue: #38bdf8;
+      --primary-navy: #00236f;
+      --accent-emerald: #10b981;
+      --accent-red: #ef4444;
+      --accent-amber: #f59e0b;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+
+    body {
+      background: var(--bg-dark);
+      color: #f8fafc;
+      font-family: 'Outfit', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 16px 24px;
+      overflow-x: hidden;
+    }
+
+    /* Top SIH Header Bar */
+    header#top-bar {
+      width: 100%;
+      max-width: 1360px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 24px;
+      background: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      margin-bottom: 16px;
+      box-shadow: 0 4px 25px rgba(0, 0, 0, 0.5);
+    }
+
+    .brand-group {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .sih-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 800;
+      color: #ffffff;
+      background: linear-gradient(135deg, #f97316 0%, #dc2626 100%);
+      padding: 4px 10px;
+      border-radius: 6px;
+      letter-spacing: 1px;
+      box-shadow: 0 0 15px rgba(249, 115, 22, 0.4);
+    }
+
+    .brand-title {
+      font-size: 20px;
+      font-weight: 800;
+      color: #ffffff;
+      letter-spacing: -0.5px;
+    }
+
+    .brand-title span {
+      color: var(--accent-blue);
+    }
+
+    .ps-info {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: #94a3b8;
+      text-align: right;
+    }
+
+    .ps-info strong {
+      color: var(--accent-blue);
+    }
+
+    /* Chapter Tabs Navigation */
+    #chapter-tabs {
+      display: flex;
+      gap: 8px;
+      max-width: 1360px;
+      width: 100%;
+      overflow-x: auto;
+      margin-bottom: 16px;
+      padding-bottom: 4px;
+    }
+
+    .tab-btn {
+      background: rgba(15, 23, 42, 0.7);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #94a3b8;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .tab-btn:hover {
+      background: rgba(30, 41, 59, 0.9);
+      color: #ffffff;
+      border-color: var(--accent-blue);
+    }
+
+    .tab-btn.active {
+      background: #00236f;
+      color: #ffffff;
+      border-color: var(--accent-blue);
+      box-shadow: 0 0 15px rgba(56, 189, 248, 0.35);
+    }
+
+    /* Main 16:9 Cinema Container */
+    #stage-container {
+      position: relative;
+      width: 100%;
+      max-width: 1360px;
+      aspect-ratio: 16 / 9;
+      background: radial-gradient(circle at 50% 40%, #061539 0%, #03081a 100%);
+      border-radius: 18px;
+      overflow: hidden;
+      border: 1px solid var(--border-color);
+      box-shadow: 0 35px 80px -20px rgba(0, 0, 0, 0.95), 0 0 60px rgba(56, 189, 248, 0.18);
+    }
+
+    canvas#canvas-fx {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    .cyber-grid {
+      position: absolute;
+      inset: 0;
+      background-image: 
+        linear-gradient(rgba(56, 189, 248, 0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(56, 189, 248, 0.04) 1px, transparent 1px);
+      background-size: 40px 40px;
+      z-index: 1;
+    }
+
+    /* Big Start Overlay */
+    #start-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(2, 6, 23, 0.82);
+      backdrop-filter: blur(12px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      cursor: pointer;
+      transition: opacity 0.4s ease, visibility 0.4s ease;
+    }
+
+    #start-overlay.hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    .play-master-btn {
+      background: linear-gradient(135deg, #00236f 0%, #1e3a8a 100%);
+      border: 2px solid var(--accent-blue);
+      color: #ffffff;
+      padding: 20px 42px;
+      border-radius: 9999px;
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: 1px;
+      box-shadow: 0 0 40px rgba(56, 189, 248, 0.6), inset 0 0 20px rgba(56, 189, 248, 0.35);
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .play-master-btn:hover {
+      transform: scale(1.06);
+      box-shadow: 0 0 60px rgba(56, 189, 248, 0.85);
+    }
+
+    /* Chapter Views */
+    .chapter-view {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      padding: 30px 44px 90px 44px;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.4s ease, transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      transform: translateY(12px) scale(0.98);
+      z-index: 10;
+      overflow-y: auto;
+    }
+
+    .chapter-view.active {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0) scale(1);
+    }
+
+    .chap-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--accent-blue);
+      background: rgba(56, 189, 248, 0.12);
+      border: 1px solid rgba(56, 189, 248, 0.35);
+      padding: 4px 14px;
+      border-radius: 9999px;
+      display: inline-block;
+      margin-bottom: 8px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      align-self: flex-start;
+    }
+
+    .chap-title {
+      font-size: 30px;
+      font-weight: 900;
+      color: #ffffff;
+      line-height: 1.15;
+      margin-bottom: 6px;
+      letter-spacing: -0.5px;
+    }
+
+    .chap-desc {
+      font-size: 14px;
+      color: #94a3b8;
+      max-width: 1000px;
+      margin-bottom: 16px;
+      line-height: 1.45;
+    }
+
+    /* Split Grids */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1.15fr;
+      gap: 18px;
+      width: 100%;
+      align-items: start;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      width: 100%;
+    }
+
+    .grid-4 {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      width: 100%;
+    }
+
+    .glass-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 16px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+      position: relative;
+      text-align: left;
+    }
+
+    .glass-card.glow-red {
+      border-color: rgba(239, 68, 68, 0.5);
+      box-shadow: 0 0 25px rgba(239, 68, 68, 0.15);
+    }
+
+    .glass-card.glow-emerald {
+      border-color: rgba(16, 185, 129, 0.5);
+      box-shadow: 0 0 25px rgba(16, 185, 129, 0.15);
+    }
+
+    .glass-card h3 {
+      font-size: 15px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .glass-card p {
+      font-size: 12px;
+      color: #94a3b8;
+      line-height: 1.45;
+    }
+
+    /* Real Prototype UI Mockup Frame */
+    .prototype-frame {
+      width: 100%;
+      border-radius: 12px;
+      border: 1px solid rgba(56, 189, 248, 0.35);
+      background: #020617;
+      box-shadow: 0 12px 35px rgba(0, 0, 0, 0.85), 0 0 20px rgba(56, 189, 248, 0.2);
+      overflow: hidden;
+      position: relative;
+      transition: transform 0.25s ease, border-color 0.25s ease;
+    }
+
+    .prototype-frame:hover {
+      border-color: var(--accent-blue);
+      transform: translateY(-2px);
+    }
+
+    .frame-topbar {
+      background: rgba(15, 23, 42, 0.95);
+      padding: 6px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: #94a3b8;
+    }
+
+    .frame-dots {
+      display: flex;
+      gap: 5px;
+    }
+
+    .frame-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+    .frame-dot.red { background: #ef4444; }
+    .frame-dot.yellow { background: #f59e0b; }
+    .frame-dot.green { background: #10b981; }
+
+    .prototype-img {
+      width: 100%;
+      height: auto;
+      display: block;
+      max-height: 275px;
+      object-fit: cover;
+      object-position: top;
+      background: #0f172a;
+    }
+
+    .img-caption {
+      padding: 6px 12px;
+      background: rgba(15, 23, 42, 0.9);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: #38bdf8;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    /* Workflow Pipeline Steps */
+    .workflow-track {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      width: 100%;
+      background: rgba(15, 23, 42, 0.7);
+      padding: 10px 14px;
+      border-radius: 10px;
+      border: 1px solid var(--border-color);
+      margin-bottom: 14px;
+    }
+
+    .wf-step {
+      flex: 1;
+      background: rgba(0, 35, 111, 0.4);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      padding: 8px 10px;
+      border-radius: 6px;
+      text-align: left;
+    }
+
+    .wf-step.active-step {
+      background: #00236f;
+      border-color: var(--accent-blue);
+      box-shadow: 0 0 15px rgba(56, 189, 248, 0.4);
+    }
+
+    .wf-step-num {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      font-weight: 800;
+      color: var(--accent-blue);
+      margin-bottom: 2px;
+    }
+
+    .wf-step-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 2px;
+    }
+
+    .wf-step-role {
+      font-size: 10px;
+      color: #94a3b8;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .wf-arrow {
+      color: var(--accent-blue);
+      font-weight: bold;
+      font-size: 14px;
+    }
+
+    /* Interactive Simulation Widgets */
+    .sim-box {
+      background: rgba(0, 0, 0, 0.65);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      border-radius: 8px;
+      padding: 12px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: #e2e8f0;
+      margin-top: 10px;
+      text-align: left;
+    }
+
+    .sim-header {
+      display: flex;
+      justify-content: space-between;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      padding-bottom: 6px;
+      margin-bottom: 8px;
+      font-weight: bold;
+      color: var(--accent-blue);
+    }
+
+    .hash-line {
+      color: #10b981;
+      word-break: break-all;
+    }
+
+    .btn-sim {
+      background: #00236f;
+      border: 1px solid var(--accent-blue);
+      color: #ffffff;
+      padding: 5px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      margin-top: 8px;
+      transition: all 0.2s;
+    }
+
+    .btn-sim:hover {
+      background: #2563eb;
+    }
+
+    /* Dynamic Subtitle Bar */
+    #subtitle-bar {
+      position: absolute;
+      bottom: 68px;
+      left: 36px;
+      right: 36px;
+      background: rgba(3, 7, 18, 0.92);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      border-radius: 8px;
+      padding: 8px 16px;
+      font-size: 13px;
+      color: #f1f5f9;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      z-index: 40;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+    }
+
+    .narrator-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      font-weight: 800;
+      color: var(--accent-blue);
+      background: rgba(56, 189, 248, 0.2);
+      padding: 2px 8px;
+      border-radius: 4px;
+      white-space: nowrap;
+    }
+
+    /* Bottom Control Bar */
+    #player-controls {
+      position: absolute;
+      bottom: 12px;
+      left: 36px;
+      right: 36px;
+      height: 46px;
+      background: rgba(15, 23, 42, 0.95);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 0 14px;
+      z-index: 50;
+    }
+
+    .ctrl-btn {
+      background: #00236f;
+      color: #ffffff;
+      border: 1px solid var(--accent-blue);
+      padding: 5px 12px;
+      font-size: 11px;
+      font-weight: 700;
+      font-family: 'JetBrains Mono', monospace;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .ctrl-btn:hover {
+      background: #1e3a8a;
+      box-shadow: 0 0 12px rgba(56, 189, 248, 0.4);
+    }
+
+    .timer-text {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: #38bdf8;
+      font-weight: 700;
+      min-width: 46px;
+    }
+
+    .scrubber-track {
+      flex: 1;
+      height: 8px;
+      background: #1e293b;
+      border-radius: 4px;
+      position: relative;
+      cursor: pointer;
+      overflow: visible;
+      transition: height 0.15s ease;
+      touch-action: none;
+    }
+
+    .scrubber-track:hover, .scrubber-track.dragging {
+      height: 10px;
+    }
+
+    .scrubber-fill {
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 0%;
+      background: linear-gradient(90deg, #38bdf8, #2563eb);
+      border-radius: 4px;
+      transition: width 0.05s linear;
+      pointer-events: none;
+    }
+
+    .scrubber-thumb {
+      position: absolute;
+      right: -7px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 14px;
+      height: 14px;
+      background: #ffffff;
+      border: 2px solid #38bdf8;
+      border-radius: 50%;
+      box-shadow: 0 0 10px rgba(56, 189, 248, 0.9);
+      pointer-events: all;
+      cursor: grab;
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+
+    .scrubber-track:hover .scrubber-thumb, .scrubber-track.dragging .scrubber-thumb {
+      transform: translateY(-50%) scale(1.35);
+      cursor: grabbing;
+      box-shadow: 0 0 18px rgba(56, 189, 248, 1);
+    }
+
+    .auto-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      font-weight: 700;
+      color: #10b981;
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid rgba(16, 185, 129, 0.4);
+      padding: 3px 8px;
+      border-radius: 4px;
+      white-space: nowrap;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top SIH Header -->
+  <header id="top-bar">
+    <div class="brand-group">
+      <div class="sih-badge">SMART INDIA HACKATHON 2026</div>
+      <div class="brand-title">EXAM<span>VAULT</span> <span style="font-size: 12px; color: #64748b; font-weight: normal;">v1.0</span></div>
+    </div>
+    <div class="ps-info">
+      <div>Problem Statement ID: <strong>SIH26194</strong></div>
+      <div>Theme: <strong>Blockchain &amp; Cybersecurity</strong> • Team: <strong>Stoic Ataraxia</strong></div>
+    </div>
+  </header>
+
+  <!-- Chapter Tabs Navigation -->
+  <nav id="chapter-tabs">
+    <button class="tab-btn active" data-chapter="0">1. Problem &amp; Zero-Trust Gate</button>
+    <button class="tab-btn" data-chapter="1">2. Proposed Solution &amp; Ledger</button>
+    <button class="tab-btn" data-chapter="2">3. End-to-End Workflow</button>
+    <button class="tab-btn" data-chapter="3">4. Cryptographic RBAC &amp; 2-Man Lock</button>
+    <button class="tab-btn" data-chapter="4">5. Risk Engine &amp; Auto-Suspension</button>
+    <button class="tab-btn" data-chapter="5">6. Forensic OCR Lab &amp; Impact</button>
+  </nav>
+
+  <!-- Main 16:9 Video Presentation Stage -->
+  <main id="stage-container">
+    <div class="cyber-grid"></div>
+    <canvas id="canvas-fx"></canvas>
+
+    <!-- Start Overlay -->
+    <div id="start-overlay">
+      <button class="play-master-btn" id="btn-master-start">
+        <span style="font-size: 18px;">▶</span>
+        <span>START AUTOMATIC DEMO PRESENTATION</span>
+      </button>
+      <div style="font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #94a3b8; margin-top: 16px;">
+        Hands-Free Auto-Advancing Video • Real Prototype Screenshots • PS ID: SIH26194
+      </div>
+    </div>
+
+    <!-- CHAPTER 0: THE PROBLEM & ZERO-TRUST GATE -->
+    <section class="chapter-view active" id="chap-0">
+      <div class="chap-badge">CHAPTER 01 • THE PROBLEM STATEMENT</div>
+      <h1 class="chap-title">The Examination Integrity Crisis</h1>
+      <p class="chap-desc">
+        Paper leaks destroy student futures and cost governments hundreds of crores. These leaks do <strong>not</strong> happen in the exam hall — they happen internally during drafting, moderation, and custody handoff before papers are ever printed.
+      </p>
+
+      <div class="grid-2">
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          <div class="glass-card glow-red">
+            <h3>🚨 Upstream Insider Exfiltration</h3>
+            <p>Jammers and CCTV in test rooms cannot stop questions from leaking weeks earlier inside moderation cells.</p>
+          </div>
+          <div class="glass-card glow-red">
+            <h3>⚖️ Zero Cryptographic Chain of Custody</h3>
+            <p>Traditional PDF email and USB sharing provide zero non-repudiation or forensic watermark tracking.</p>
+          </div>
+          <div class="glass-card glow-red">
+            <h3>💸 Enormous Economic Cost</h3>
+            <p>Cancellations erode public trust and cost examination boards hundreds of crores in re-testing logistics.</p>
+          </div>
+        </div>
+
+        <!-- Real Prototype Screenshot: Zero-Trust Login & Lockdown UI -->
+        <div class="prototype-frame">
+          <div class="frame-topbar">
+            <div class="frame-dots"><div class="frame-dot red"></div><div class="frame-dot yellow"></div><div class="frame-dot green"></div></div>
+            <span>http://127.0.0.1:5173/login</span>
+            <span style="color: #ef4444; font-weight: bold;">[LIVE PROTOTYPE]</span>
+          </div>
+          <img src="assets/img/02_login_gate.png" alt="ExamVault Zero Trust Login Gate" class="prototype-img">
+          <div class="img-caption">
+            <span>🛡️ ExamVault Zero-Trust Gateway &amp; Strict RBAC Login</span>
+            <span style="color: #10b981;">✓ 2FA + Registered Device Check</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CHAPTER 1: THE PROPOSED SOLUTION -->
+    <section class="chapter-view" id="chap-1">
+      <div class="chap-badge">CHAPTER 02 • THE PROPOSED SOLUTION</div>
+      <h1 class="chap-title">ExamVault: Zero-Trust Examination Lifecycle</h1>
+      <p class="chap-desc">
+        An enterprise examination-content lifecycle platform powered by <strong>ExamChain</strong>, our permissioned distributed ledger. ExamChain stores only cryptographic custody proofs and hashes, keeping confidential questions completely private and off-chain.
+      </p>
+
+      <div class="grid-2">
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          <div class="glass-card glow-emerald">
+            <h3>🔒 Privacy-by-Design DLT</h3>
+            <p>ExamChain records <em>only</em> cryptographic hashes and custody proofs. Confidential questions remain encrypted in local enclaves.</p>
+          </div>
+          <div class="glass-card glow-emerald">
+            <h3>👥 2-Man Cryptographic Dual Lock</h3>
+            <p>No single officer can seal or release an exam paper. Requires independent Approver + Admin_2 authorization.</p>
+          </div>
+          <div class="glass-card glow-emerald">
+            <h3>⚡ Sub-3-Second Forensic Traceability</h3>
+            <p>Invisible session watermarking + deterministic MCQ option shuffling traces leaked photos in &lt;3s.</p>
+          </div>
+        </div>
+
+        <!-- Real Prototype Screenshot: ExamChain Audit Ledger -->
+        <div class="prototype-frame">
+          <div class="frame-topbar">
+            <div class="frame-dots"><div class="frame-dot red"></div><div class="frame-dot yellow"></div><div class="frame-dot green"></div></div>
+            <span>http://127.0.0.1:5173/investigator/audit-logs</span>
+            <span style="color: #10b981; font-weight: bold;">[EXAMCHAIN DLT]</span>
+          </div>
+          <img src="assets/img/07_examchain_audit.png" alt="ExamChain Immutable Audit Ledger" class="prototype-img">
+          <div class="img-caption">
+            <span>🔗 Real ExamChain Immutable Hash-Chained Audit Ledger</span>
+            <span style="color: #10b981;">✓ 100% Chain Integrity Verified</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CHAPTER 2: WORKFLOW WALKTHROUGH -->
+    <section class="chapter-view" id="chap-2">
+      <div class="chap-badge">CHAPTER 03 • END-TO-END WORKFLOW</div>
+      <h1 class="chap-title">The Five-Stage Security Gateway Pipeline</h1>
+      <p class="chap-desc">
+        Strict separation of duties. Every lifecycle transition is access-controlled, hash-anchored, and recorded in ExamChain.
+      </p>
+
+      <div class="workflow-track">
+        <div class="wf-step active-step">
+          <div class="wf-step-num">STAGE 01</div>
+          <div class="wf-step-title">Secure Drafting</div>
+          <div class="wf-step-role">Setter_A (AES-256)</div>
+        </div>
+        <div class="wf-arrow">&rarr;</div>
+        <div class="wf-step active-step">
+          <div class="wf-step-num">STAGE 02</div>
+          <div class="wf-step-title">Moderation Queue</div>
+          <div class="wf-step-role">Reviewer_B (Watermarked)</div>
+        </div>
+        <div class="wf-arrow">&rarr;</div>
+        <div class="wf-step active-step">
+          <div class="wf-step-num">STAGE 03</div>
+          <div class="wf-step-title">Assembly &amp; Lock</div>
+          <div class="wf-step-role">Approver_C (Initiate)</div>
+        </div>
+        <div class="wf-arrow">&rarr;</div>
+        <div class="wf-step active-step">
+          <div class="wf-step-num">STAGE 04</div>
+          <div class="wf-step-title">2nd Dual Seal</div>
+          <div class="wf-step-role">Admin_2 (Confirm)</div>
+        </div>
+        <div class="wf-arrow">&rarr;</div>
+        <div class="wf-step active-step">
+          <div class="wf-step-num">STAGE 05</div>
+          <div class="wf-step-title">Secure Delivery</div>
+          <div class="wf-step-role">Print / CBT Center</div>
+        </div>
+      </div>
+
+      <!-- Real Prototype Screenshots: Setter, Reviewer, Approver -->
+      <div class="grid-3">
+        <div class="prototype-frame">
+          <div class="frame-topbar">
+            <div class="frame-dots"><div class="frame-dot red"></div><div class="frame-dot yellow"></div><div class="frame-dot green"></div></div>
+            <span>Setter Workspace</span>
+          </div>
+          <img src="assets/img/03_setter_dashboard.png" alt="Setter Dashboard" class="prototype-img" style="max-height: 160px;">
+          <div class="img-caption"><span>Stage 1: Encrypted Authoring</span></div>
+        </div>
+
+        <div class="prototype-frame">
+          <div class="frame-topbar">
+            <div class="frame-dots"><div class="frame-dot red"></div><div class="frame-dot yellow"></div><div class="frame-dot green"></div></div>
+            <span>Reviewer Moderation</span>
+          </div>
+          <img src="assets/img/04_reviewer_dashboard.png" alt="Reviewer Dashboard" class="prototype-img" style="max-height: 160px;">
+          <div class="img-caption"><span>Stage 2: Watermarked Review</span></div>
+        </div>
+
+        <div class="prototype-frame">
+          <div class="frame-topbar">
+            <div class="frame-dots"><div class="frame-dot red"></div><div class="frame-dot yellow"></div><div class="frame-dot green"></div></div>
+            <span>Approver Assembly</span>
+          </div>
+          <img src="assets/img/05_approver_dashboard.png" alt="Approver Dashboard" class="prototype-img" style="max-height: 160px;">
+          <div class="img-caption"><span>Stage 3 &amp; 4: 2-Man Lock</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CHAPTER 3: DUAL LOCK & AUDIT LEDGER -->
+    <section class="chapter-view" id="chap-3">
+      <div class="chap-badge">CHAPTER 04 • CRYPTOGRAPHIC ARCHITECTURE</div>
+      <h1 class="chap-title">Cryptographic RBAC &amp; 2-Man Dual Lock</h1>
+      <p class="chap-desc">
+        Under our 2-Man Authorization rule, no single officer can seal an exam package. It requires independent dual cryptographic keys, while every event is chained in ExamChain.
+      </p>
+
+      <div class="grid-2">
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          <div class="glass-card">
+            <h3>🔗 Live Blockchain Hash Chain Simulation</h3>
+            <p>Every event is chained using <code>current_hash = SHA256(canonical_payload + previous_hash)</code>.</p>
+            <div class="sim-box" id="sim-ledger-box">
+              <div class="sim-header">
+                <span>BLOCK #1042 • STATUS: VALID</span>
+                <span style="color: #10b981;">✓ 100% INTEGRITY</span>
+              </div>
+              <div>Action: <code>PACKAGE_FINAL_LOCKED</code></div>
+              <div>Prev Hash: <span style="color: #94a3b8;">7f83b165...e3b0c442</span></div>
+              <div>Curr Hash: <span class="hash-line" id="disp-curr-hash">a89f41b2e59103bc49281a07d38e2194</span></div>
+              <button class="btn-sim" id="btn-simulate-tamper">Simulate Database Tampering</button>
+            </div>
+          </div>
+
+          <div class="glass-card">
+            <h3>👥 2-Man Dual Lock Protocol</h3>
+            <p>Officer 1 (Approver) initiates package seal; Officer 2 (Admin_2) enters independent key to release.</p>
+          </div>
+        </div>
+
+        <!-- Real Prototype Screenshot: Admin 2 Dual Lock Dashboard -->
+        <div class="prototype-frame">
+          <div class="frame-topbar">
+            <div class="frame-dots"><div class="frame-dot red"></div><div class="frame-dot yellow"></div><div class="frame-dot green"></div></div>
+            <span>http://127.0.0.1:5173/admin2/dashboard</span>
+            <span style="color: #38bdf8; font-weight: bold;">[DUAL LOCK PORTAL]</span>
+          </div>
+          <img src="assets/img/06_admin2_dashboard.png" alt="Admin 2 Dual Lock Dashboard" class="prototype-img">
+          <div class="img-caption">
+            <span>🛡️ Admin_2 Secondary Cryptographic Confirmation Console</span>
+            <span style="color: #10b981;">✓ Dual Threshold Enforced</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CHAPTER 4: RISK ENGINE & AUTO SUSPENSION -->
+    <section class="chapter-view" id="chap-4">
+      <div class="chap-badge">CHAPTER 05 • DEFENSE IN DEPTH</div>
+      <h1 class="chap-title">Explainable Risk Engine &amp; Live Threat Containment</h1>
+      <p class="chap-desc">
+        Our explainable risk engine evaluates real-time telemetry like unknown devices, off-hours access, and rapid inspection pacing. If suspicious activity breaches 60 points, the active session is automatically locked down in real-time.
+      </p>
+
+      <div class="grid-2">
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          <div class="grid-2" style="grid-template-columns: 1fr 1fr; gap: 8px;">
+            <div class="glass-card" style="padding: 10px;">
+              <div style="font-size: 16px; font-weight: 800; color: #f59e0b;">+35 PTS</div>
+              <h3 style="font-size: 12px;">Unknown Device</h3>
+              <p style="font-size: 11px;">Unregistered foreign laptop.</p>
+            </div>
+            <div class="glass-card" style="padding: 10px;">
+              <div style="font-size: 16px; font-weight: 800; color: #f59e0b;">+25 PTS</div>
+              <h3 style="font-size: 12px;">Off-Hours Access</h3>
+              <p style="font-size: 11px;">Access between 00:00 &ndash; 05:00.</p>
+            </div>
+            <div class="glass-card" style="padding: 10px;">
+              <div style="font-size: 16px; font-weight: 800; color: #ef4444;">+35 PTS</div>
+              <h3 style="font-size: 12px;">Rapid Pacing</h3>
+              <p style="font-size: 11px;">High velocity scraping anomaly.</p>
+            </div>
+            <div class="glass-card" style="padding: 10px;">
+              <div style="font-size: 16px; font-weight: 800; color: #ef4444;">+35 PTS</div>
+              <h3 style="font-size: 12px;">Biometric Fail</h3>
+              <p style="font-size: 11px;">Face verification mismatch.</p>
+            </div>
+          </div>
+
+          <div class="sim-box" style="margin-top: 4px;">
+            <div class="sim-header"><span>REAL-TIME THREAT CONTAINMENT</span><span style="color: #ef4444;">🚨 AUTO-SUSPENDED</span></div>
+            <div>Score &ge;60 pts &rarr; <strong>Active session terminated instantly</strong> without human delay.</div>
+          </div>
+        </div>
+
+        <!-- Real Prototype Screenshot: Risk Sessions Page -->
+        <div class="prototype-frame">
+          <div class="frame-topbar">
+            <div class="frame-dots"><div class="frame-dot red"></div><div class="frame-dot yellow"></div><div class="frame-dot green"></div></div>
+            <span>http://127.0.0.1:5173/investigator/risk-sessions</span>
+            <span style="color: #f59e0b; font-weight: bold;">[ACTIVE TELEMETRY]</span>
+          </div>
+          <img src="assets/img/08_risk_sessions.png" alt="Real-time Risk Sessions" class="prototype-img">
+          <div class="img-caption">
+            <span>⚡ Real-Time Pacing Velocity &amp; Anomaly Score Inspector</span>
+            <span style="color: #ef4444;">🚨 Suspended Sessions Flagged</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CHAPTER 5: FORENSIC OCR & LEGAL IMPACT -->
+    <section class="chapter-view" id="chap-5">
+      <div class="chap-badge">CHAPTER 06 • FORENSIC LAB &amp; IMPACT</div>
+      <h1 class="chap-title">Sub-3-Second Leak Traceability &amp; SIH Impact</h1>
+      <p class="chap-desc">
+        If a paper is photographed and leaked, our Tesseract OCR lab scans the micro-watermark in under three seconds, identifying the leaking officer and session. ExamVault eliminates paper leaks and fully aligns with the Public Examinations Act of 2024.
+      </p>
+
+      <div class="grid-2">
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          <div class="glass-card glow-emerald">
+            <h3>🔬 Forensic Evidence Breakdown</h3>
+            <div class="sim-box" style="background: rgba(0, 0, 0, 0.7); margin-top: 4px;">
+              <div style="color: #10b981; font-weight: bold; margin-bottom: 4px;">✓ 100% CRYPTOGRAPHIC MATCH</div>
+              <div>Leaked Image: <code>NEET_PHYSICS_Q108.JPG</code></div>
+              <div>Extracted Token: <code>EV-SESS-9821-REV-B</code></div>
+              <div>Identified Officer: <strong style="color: #f87171;">Reviewer_B (Dr. Alok Verma)</strong></div>
+              <div>Timestamp: <code>2026-09-28 02:14:22 UTC</code></div>
+            </div>
+          </div>
+
+          <div class="glass-card glow-emerald">
+            <h3>⚖️ Legal &amp; Institutional Alignment</h3>
+            <p style="font-size: 12px; line-height: 1.45;">
+              • Aligns with <strong>The Public Examinations (Prevention of Unfair Means) Act, 2024</strong>.<br>
+              • Fulfills SIH 2026 Problem Statement <strong>SIH26194</strong>.<br>
+              • Built with pride by <strong>Team Stoic Ataraxia</strong>.
+            </p>
+          </div>
+
+          <!-- Amazing Ending Line Banner -->
+          <div class="glass-card glow-emerald" style="background: linear-gradient(135deg, rgba(0, 35, 111, 0.6) 0%, rgba(16, 185, 129, 0.2) 100%); border-color: rgba(56, 189, 248, 0.6); padding: 12px;">
+            <div style="font-size: 12px; font-weight: 800; color: #38bdf8; margin-bottom: 4px; font-family: 'Space Grotesk', sans-serif;">
+              ✨ THE PLEDGE OF EXAMVAULT
+            </div>
+            <p style="font-size: 11.5px; color: #f8fafc; font-style: italic; line-height: 1.45;">
+              "ExamVault does not merely protect files — it safeguards the dreams, hard work, and uncompromised future of 50 million young aspirants across India. Securing Examination Sanctity. Empowering Merit. Restoring Public Trust."
+            </p>
+          </div>
+
+          <!-- Realistic Security & Forensic Scope Disclaimer -->
+          <div style="background: rgba(15, 23, 42, 0.85); border: 1px dashed rgba(245, 158, 11, 0.4); border-radius: 8px; padding: 8px 12px; font-family: 'JetBrains Mono', monospace; font-size: 9.5px; color: #cbd5e1; line-height: 1.4;">
+            <span style="color: #f59e0b; font-weight: bold;">⚠️ Security &amp; Forensic Scope Disclaimer:</span>
+            In accordance with zero-trust principles, no technological platform can guarantee 100% mathematical immunity against physical coercion or air-gapped human collusion. ExamVault eliminates upstream digital leak vectors, enforces dual cryptographic accountability, and guarantees &lt;3s verifiable forensic attribution when physical breaches occur.
+          </div>
+        </div>
+
+        <!-- Real Prototype Screenshot: Forensic OCR Lab -->
+        <div class="prototype-frame">
+          <div class="frame-topbar">
+            <div class="frame-dots"><div class="frame-dot red"></div><div class="frame-dot yellow"></div><div class="frame-dot green"></div></div>
+            <span>http://127.0.0.1:5173/investigator/leaks</span>
+            <span style="color: #10b981; font-weight: bold;">[OCR FORENSIC LAB]</span>
+          </div>
+          <img src="assets/img/09_forensic_ocr_lab.png" alt="Forensic OCR Lab" class="prototype-img" style="max-height: 380px;">
+          <div class="img-caption">
+            <span>🔬 Live Tesseract OCR Watermark Extractor &amp; PDF Export</span>
+            <span style="color: #10b981;">&lt; 3.0s Attribution</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Dynamic Subtitle Bar -->
+    <div id="subtitle-bar">
+      <span class="narrator-badge">AUDIO NARRATION</span>
+      <span id="subtitle-text">Welcome to ExamVault. Every year, millions of students lose their future to examination leaks...</span>
+    </div>
+
+    <!-- Bottom Player Controls -->
+    <div id="player-controls">
+      <button class="ctrl-btn" id="btn-play">▶ PLAY DEMO</button>
+      <button class="ctrl-btn" id="btn-prev">&larr; PREV</button>
+      <button class="ctrl-btn" id="btn-next">NEXT &rarr;</button>
+      <div class="timer-text" id="disp-timer">00:00</div>
+      <div class="scrubber-track" id="scrubber">
+        <div class="scrubber-fill" id="scrubber-fill">
+          <div class="scrubber-thumb" id="scrubber-thumb"></div>
+        </div>
+      </div>
+      <div class="auto-badge">⚡ AUTO-PLAY ON</div>
+      <button class="ctrl-btn" id="btn-voice">🔊 VOICE ON</button>
+      <button class="ctrl-btn" id="btn-fullscreen">⛶ FULLSCREEN</button>
+    </div>
+  </main>
+
+  <!-- Background Music Audio Track -->
+  <audio id="bg-music" src="assets/music/trailer-track.mp3" loop preload="auto"></audio>
+
+  <script>
+    // Chapter Presentation Script and Narrations
+    const CHAPTERS = [
+      {
+        id: 'chap-0',
+        title: 'Problem & Zero-Trust Gate',
+        duration: 24,
+        narration: "High-stakes paper leaks destroy student futures and cost governments hundreds of crores. These leaks do not happen in the exam hall — they happen internally during drafting, review, and custody transfer before papers are ever printed."
+      },
+      {
+        id: 'chap-1',
+        title: 'Proposed Solution & Ledger',
+        duration: 24,
+        narration: "We built ExamVault: an enterprise zero-trust examination lifecycle gateway powered by ExamChain, our permissioned distributed ledger. ExamChain stores only cryptographic custody proofs and hashes, keeping confidential questions completely private and off-chain."
+      },
+      {
+        id: 'chap-2',
+        title: 'End-to-End Workflow',
+        duration: 26,
+        narration: "The workflow spans five strict stages: encrypted drafting by Setters, watermarked moderation by Reviewers, assembly by Approvers, secondary cryptographic confirmation by Admin 2, and tamper-evident handoff to Print and CBT centers."
+      },
+      {
+        id: 'chap-3',
+        title: 'Cryptographic RBAC & Dual Lock',
+        duration: 24,
+        narration: "Under our 2-Man Authorization rule, no single officer can seal an exam package. It requires independent dual cryptographic keys. Meanwhile, every action is hash-chained in ExamChain, guaranteeing instant tamper detection."
+      },
+      {
+        id: 'chap-4',
+        title: 'Risk Engine & Auto-Suspension',
+        duration: 24,
+        narration: "Our explainable risk engine evaluates real-time telemetry like unknown devices, off-hours access, and rapid inspection pacing. If suspicious activity breaches 60 points, the active session is automatically locked down in real-time."
+      },
+      {
+        id: 'chap-5',
+        title: 'Forensic OCR Lab & Impact',
+        duration: 40,
+        narration: "If a paper is photographed and leaked, our Tesseract OCR lab scans the micro-watermark in under three seconds, identifying the leaking officer and session. While no technology can claim 100% mathematical immunity against physical human collusion, ExamVault eliminates upstream exfiltration vectors and guarantees instant forensic accountability. ExamVault is our pledge by Team Stoic Ataraxia to safeguard the aspirations of 50 million students. Securing examination sanctity, empowering merit, restoring public trust."
+      }
+    ];
+
+    let currentChapter = 0;
+    let isPlaying = false;
+    let chapterElapsed = 0;
+    let voiceEnabled = true;
+    let timerInterval = null;
+    let autoAdvanceTimer = null;
+
+    const startOverlay = document.getElementById('start-overlay');
+    const btnMasterStart = document.getElementById('btn-master-start');
+    const btnPlay = document.getElementById('btn-play');
+    const btnPrev = document.getElementById('btn-prev');
+    const btnNext = document.getElementById('btn-next');
+    const btnVoice = document.getElementById('btn-voice');
+    const btnFullscreen = document.getElementById('btn-fullscreen');
+    const subtitleText = document.getElementById('subtitle-text');
+    const dispTimer = document.getElementById('disp-timer');
+    const scrubberFill = document.getElementById('scrubber-fill');
+    const scrubber = document.getElementById('scrubber');
+    const bgMusic = document.getElementById('bg-music');
+    const stageContainer = document.getElementById('stage-container');
+    const tabBtns = document.querySelectorAll('.tab-btn');
+
+    // Background Music Volume Ducking Configuration
+    const BASE_MUSIC_VOLUME = 0.05; // Very subtle, clean background volume
+    const DUCKED_MUSIC_VOLUME = 0.02; // Ducked volume while narrator is speaking
+
+    // Speech Synthesis with Automatic Chapter Progression
+    function speakText(text) {
+      if (!window.speechSynthesis) return;
+      window.speechSynthesis.cancel();
+      if (!voiceEnabled) return;
+
+      if (bgMusic) bgMusic.volume = DUCKED_MUSIC_VOLUME;
+
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.rate = 1.05;
+      utterance.pitch = 1.0;
+
+      utterance.onend = () => {
+        if (bgMusic) bgMusic.volume = BASE_MUSIC_VOLUME;
+        // Automatic Progression: Once narration finishes, wait 1.5s for viewer comprehension then auto-advance!
+        if (isPlaying) {
+          clearTimeout(autoAdvanceTimer);
+          autoAdvanceTimer = setTimeout(() => {
+            if (isPlaying) {
+              if (currentChapter < CHAPTERS.length - 1) {
+                showChapter(currentChapter + 1);
+              } else {
+                pausePresentation();
+                showChapter(0);
+              }
+            }
+          }, 1500);
+        }
+      };
+
+      utterance.onerror = () => {
+        if (bgMusic) bgMusic.volume = BASE_MUSIC_VOLUME;
+      };
+
+      window.speechSynthesis.speak(utterance);
+    }
+
+    function updateProgress() {
+      // If current chapter is running longer than expected, dynamically expand its duration
+      if (chapterElapsed > CHAPTERS[currentChapter].duration) {
+        CHAPTERS[currentChapter].duration = Math.ceil(chapterElapsed) + 1;
+      }
+
+      const totalDuration = CHAPTERS.reduce((acc, c) => acc + c.duration, 0);
+      let totalElapsed = 0;
+      for (let i = 0; i < CHAPTERS.length; i++) {
+        if (i < currentChapter) {
+          totalElapsed += CHAPTERS[i].duration;
+        } else if (i === currentChapter) {
+          totalElapsed += chapterElapsed;
+        }
+      }
+
+      // Keep totalElapsed within totalDuration
+      totalElapsed = Math.min(totalElapsed, totalDuration);
+
+      const pct = Math.min(100, (totalElapsed / totalDuration) * 100);
+      scrubberFill.style.width = pct + '%';
+      
+      const mCur = Math.floor(totalElapsed / 60).toString().padStart(2, '0');
+      const sCur = Math.floor(totalElapsed % 60).toString().padStart(2, '0');
+      dispTimer.textContent = `${mCur}:${sCur}`;
+    }
+
+    function showChapter(idx) {
+      currentChapter = idx;
+      chapterElapsed = 0;
+      clearTimeout(autoAdvanceTimer);
+
+      // Update Tab Classes
+      tabBtns.forEach((btn, i) => {
+        btn.classList.toggle('active', i === idx);
+      });
+
+      // Update Chapter Views
+      CHAPTERS.forEach((c, i) => {
+        const el = document.getElementById(c.id);
+        if (el) el.classList.toggle('active', i === idx);
+      });
+
+      // Update Subtitle
+      const chap = CHAPTERS[idx];
+      subtitleText.textContent = chap.narration;
+
+      // Update Timer UI Immediately
+      updateProgress();
+
+      if (isPlaying) {
+        speakText(chap.narration);
+      }
+    }
+
+    function tick() {
+      if (!isPlaying) return;
+      chapterElapsed += 0.2;
+      const targetDuration = CHAPTERS[currentChapter].duration;
+
+      // Fallback timer if speech synthesis is disabled
+      if (!voiceEnabled && chapterElapsed >= targetDuration) {
+        if (currentChapter < CHAPTERS.length - 1) {
+          showChapter(currentChapter + 1);
+        } else {
+          pausePresentation();
+          currentChapter = 0;
+          showChapter(0);
+          return;
+        }
+      }
+
+      updateProgress();
+    }
+
+    function playPresentation() {
+      isPlaying = true;
+      startOverlay.classList.add('hidden');
+      btnPlay.textContent = '❚❚ PAUSE';
+      bgMusic.volume = BASE_MUSIC_VOLUME;
+      bgMusic.play().catch(() => {});
+      speakText(CHAPTERS[currentChapter].narration);
+      clearInterval(timerInterval);
+      timerInterval = setInterval(tick, 200);
+    }
+
+    function pausePresentation() {
+      isPlaying = false;
+      btnPlay.textContent = '▶ PLAY DEMO';
+      bgMusic.pause();
+      clearTimeout(autoAdvanceTimer);
+      if (window.speechSynthesis) window.speechSynthesis.cancel();
+      clearInterval(timerInterval);
+    }
+
+    btnMasterStart.addEventListener('click', () => {
+      playPresentation();
+    });
+
+    btnPlay.addEventListener('click', () => {
+      if (isPlaying) pausePresentation();
+      else playPresentation();
+    });
+
+    btnNext.addEventListener('click', () => {
+      if (currentChapter < CHAPTERS.length - 1) {
+        showChapter(currentChapter + 1);
+      }
+    });
+
+    btnPrev.addEventListener('click', () => {
+      if (currentChapter > 0) {
+        showChapter(currentChapter - 1);
+      }
+    });
+
+    tabBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const idx = parseInt(btn.getAttribute('data-chapter'), 10);
+        showChapter(idx);
+      });
+    });
+
+    btnVoice.addEventListener('click', () => {
+      voiceEnabled = !voiceEnabled;
+      btnVoice.textContent = voiceEnabled ? '🔊 VOICE ON' : '🔇 VOICE OFF';
+      if (!voiceEnabled && window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+        if (bgMusic) bgMusic.volume = BASE_MUSIC_VOLUME;
+      } else if (voiceEnabled && isPlaying) {
+        speakText(CHAPTERS[currentChapter].narration);
+      }
+    });
+
+    btnFullscreen.addEventListener('click', () => {
+      if (!document.fullscreenElement) {
+        stageContainer.requestFullscreen().catch(() => {});
+      } else {
+        document.exitFullscreen();
+      }
+    });
+
+    // Interactive Scrubber Dragging & Seeking Logic
+    let isDraggingScrubber = false;
+
+    function getScrubberSecondsFromEvent(e) {
+      const rect = scrubber.getBoundingClientRect();
+      const clientX = e.touches && e.touches.length > 0 ? e.touches[0].clientX : e.clientX;
+      const pct = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+      const totalDuration = CHAPTERS.reduce((acc, c) => acc + c.duration, 0);
+      return pct * totalDuration;
+    }
+
+    function seekToSeconds(targetSeconds) {
+      const totalDuration = CHAPTERS.reduce((acc, c) => acc + c.duration, 0);
+      targetSeconds = Math.max(0, Math.min(targetSeconds, totalDuration));
+
+      let accum = 0;
+      let targetChap = 0;
+      let targetElapsed = 0;
+
+      for (let i = 0; i < CHAPTERS.length; i++) {
+        if (targetSeconds < accum + CHAPTERS[i].duration || i === CHAPTERS.length - 1) {
+          targetChap = i;
+          targetElapsed = targetSeconds - accum;
+          break;
+        }
+        accum += CHAPTERS[i].duration;
+      }
+
+      currentChapter = targetChap;
+      chapterElapsed = targetElapsed;
+      clearTimeout(autoAdvanceTimer);
+
+      // Update UI
+      tabBtns.forEach((btn, i) => {
+        btn.classList.toggle('active', i === targetChap);
+      });
+
+      CHAPTERS.forEach((c, i) => {
+        const el = document.getElementById(c.id);
+        if (el) el.classList.toggle('active', i === targetChap);
+      });
+
+      const chap = CHAPTERS[targetChap];
+      subtitleText.textContent = chap.narration;
+
+      updateProgress();
+
+      if (isPlaying) {
+        speakText(chap.narration);
+      }
+    }
+
+    if (scrubber) {
+      scrubber.addEventListener('mousedown', (e) => {
+        isDraggingScrubber = true;
+        scrubber.classList.add('dragging');
+        const secs = getScrubberSecondsFromEvent(e);
+        seekToSeconds(secs);
+      });
+
+      scrubber.addEventListener('touchstart', (e) => {
+        isDraggingScrubber = true;
+        scrubber.classList.add('dragging');
+        const secs = getScrubberSecondsFromEvent(e);
+        seekToSeconds(secs);
+      }, { passive: false });
+
+      window.addEventListener('mousemove', (e) => {
+        if (!isDraggingScrubber) return;
+        e.preventDefault();
+        const secs = getScrubberSecondsFromEvent(e);
+        seekToSeconds(secs);
+      });
+
+      window.addEventListener('touchmove', (e) => {
+        if (!isDraggingScrubber) return;
+        const secs = getScrubberSecondsFromEvent(e);
+        seekToSeconds(secs);
+      }, { passive: false });
+
+      window.addEventListener('mouseup', () => {
+        if (isDraggingScrubber) {
+          isDraggingScrubber = false;
+          scrubber.classList.remove('dragging');
+        }
+      });
+
+      window.addEventListener('touchend', () => {
+        if (isDraggingScrubber) {
+          isDraggingScrubber = false;
+          scrubber.classList.remove('dragging');
+        }
+      });
+    }
+
+    // Tamper Simulation Interactive Button
+    const btnSimTamper = document.getElementById('btn-simulate-tamper');
+    const dispCurrHash = document.getElementById('disp-curr-hash');
+    let isTampered = false;
+
+    if (btnSimTamper) {
+      btnSimTamper.addEventListener('click', () => {
+        isTampered = !isTampered;
+        if (isTampered) {
+          dispCurrHash.textContent = 'MISMATCH: 0xDEADBEEF (Tampering Detected!)';
+          dispCurrHash.style.color = '#ef4444';
+          btnSimTamper.textContent = 'Restore Original Hash State';
+        } else {
+          dispCurrHash.textContent = 'a89f41b2e59103bc49281a07d38e2194';
+          dispCurrHash.style.color = '#10b981';
+          btnSimTamper.textContent = 'Simulate Database Tampering';
+        }
+      });
+    }
+
+    // Particle Canvas Animation
+    const canvas = document.getElementById('canvas-fx');
+    const ctx = canvas.getContext('2d');
+    function resizeCanvas() {
+      canvas.width = stageContainer.clientWidth || 1280;
+      canvas.height = stageContainer.clientHeight || 720;
+    }
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+
+    const particles = Array.from({ length: 35 }, () => ({
+      x: Math.random() * 1280,
+      y: Math.random() * 720,
+      vx: (Math.random() - 0.5) * 0.3,
+      vy: (Math.random() - 0.5) * 0.3,
+      size: Math.random() * 2 + 1,
+      alpha: Math.random() * 0.35 + 0.1
+    }));
+
+    function drawParticles() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      particles.forEach(p => {
+        p.x += p.vx;
+        p.y += p.vy;
+        if (p.x < 0) p.x = canvas.width;
+        if (p.x > canvas.width) p.x = 0;
+        if (p.y < 0) p.y = canvas.height;
+        if (p.y > canvas.height) p.y = 0;
+
+        ctx.fillStyle = `rgba(56, 189, 248, ${p.alpha})`;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        ctx.fill();
+      });
+      requestAnimationFrame(drawParticles);
+    }
+    drawParticles();
+
+    // Video Screen Recorder Feature
+    let mediaRecorder = null;
+    let recordedChunks = [];
+    const btnRecordTop = document.getElementById('btn-record-top');
+
+    async function toggleScreenRecording() {
+      if (mediaRecorder && mediaRecorder.state === 'recording') {
+        mediaRecorder.stop();
+        if (btnRecordTop) btnRecordTop.textContent = '🎥 RECORD VIDEO';
+        return;
+      }
+
+      try {
+        const stream = await navigator.mediaDevices.getDisplayMedia({
+          video: { displaySurface: "browser" },
+          audio: true
+        });
+
+        recordedChunks = [];
+        const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9')
+          ? 'video/webm;codecs=vp9'
+          : 'video/webm';
+
+        mediaRecorder = new MediaRecorder(stream, { mimeType });
+
+        mediaRecorder.ondataavailable = (event) => {
+          if (event.data && event.data.size > 0) {
+            recordedChunks.push(event.data);
+          }
+        };
+
+        mediaRecorder.onstop = () => {
+          const blob = new Blob(recordedChunks, { type: 'video/webm' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.style.display = 'none';
+          a.href = url;
+          a.download = 'ExamVault_SIH2026_Official_Demo_Video.webm';
+          document.body.appendChild(a);
+          a.click();
+          setTimeout(() => {
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+          }, 100);
+
+          stream.getTracks().forEach(track => track.stop());
+          if (btnRecordTop) btnRecordTop.textContent = '🎥 RECORD VIDEO';
+        };
+
+        mediaRecorder.start();
+        if (btnRecordTop) btnRecordTop.textContent = '⏹ STOP RECORDING';
+        
+        // Reset to chapter 0 and play automatically
+        showChapter(0);
+        playPresentation();
+      } catch (err) {
+        console.warn('Screen recording cancelled or failed:', err);
+      }
+    }
+
+    if (btnRecordTop) {
+      btnRecordTop.addEventListener('click', toggleScreenRecording);
+    }
+
+    // Initial Chapter Setup
+    showChapter(0);
+  </script>
+</body>
+</html>

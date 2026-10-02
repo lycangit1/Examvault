@@ -1,0 +1,30 @@
+# ExamVault — Launch Showcase & Social Media Copy
+
+## 🐦 Twitter / X (Pitch Hook)
+Examination leaks don't happen in exam halls — they happen during drafting and handoff. 
+
+We built ExamVault: the Zero-Trust Examination Lifecycle Gateway.
+🔒 2-Man Cryptographic Package Lock
+⚡ SHA-256 Tamper-Evident Ledger
+🎯 Sub-3-Second Forensic OCR Traceability
+
+Built with ❤️ by Team Ataraxia for Smart India Hackathon 2026. #SIH2026 #CyberSecurity #ZeroTrust
+
+---
+
+## 💼 LinkedIn (Institutional & Enterprise)
+Paper leaks destroy student futures and cost examination boards hundreds of crores. 
+
+Today, we're proud to unveil **ExamVault** — a zero-trust examination security gateway built from the ground up to prevent internal paper exfiltration before questions ever reach the printing press or CBT terminal.
+
+Key Innovations:
+1. **Least-Privilege RBAC & PostgreSQL RLS:** Question setters see only own drafts; reviewers see only assigned moderation queues.
+2. **2-Man Authorization Lock:** Cryptographic package sealing requires two independent officers (Approver + Admin_2) to eliminate single-point insider compromise.
+3. **Dynamic Session Watermarking & OCR Forensics:** Any photographed leak is trace-matched to the leaking session and device in under 3 seconds.
+
+Check out our launch trailer and technical specifications! 🚀
+
+---
+
+## 📢 Hackathon Presentation / Discord Intro
+"Most security systems monitor the candidate in the exam hall. ExamVault secures the entire exam preparation lifecycle *before* the paper is ever printed. Zero Trust. Zero Leaks. Complete Forensic Accountability."

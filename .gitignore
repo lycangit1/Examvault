@@ -44,6 +44,17 @@ htmlcov/
 backend/.env
 frontend/.env.local
 
+# Excluded Project Docs & Local Scripts (as requested)
+prd.md
+tad backend.md
+take_screenshots.cjs
+/package.json
+/package-lock.json
+
+# Temporary & Large Archives
+*.zip
+*.tar.gz
+
 # IDE & OS
 .DS_Store
 Thumbs.db

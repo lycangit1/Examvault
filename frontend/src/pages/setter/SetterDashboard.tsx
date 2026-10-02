@@ -7,26 +7,40 @@ import { Question } from '../../types';
 import { QuestionStatusBadge } from '../../components/common/Badge';
 import { GlowCard } from '../../components/ui/spotlight-card';
 
+import { INITIAL_SEED_QUESTIONS } from '../../lib/mockData';
+
 export const SetterDashboard: React.FC = () => {
   const { user } = useAuth();
-  const [questions, setQuestions] = useState<Question[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [questions, setQuestions] = useState<Question[]>(INITIAL_SEED_QUESTIONS);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     async function loadQuestions() {
       if (!user) return;
       try {
-        setLoading(true);
         const { data, error } = await supabase
           .from('questions')
           .select('*, creator:profiles!created_by(*), reviewer:profiles!assigned_reviewer_id(*)')
           .order('created_at', { ascending: false });
 
-        if (data) {
+        if (data && data.length > 0) {
           setQuestions(data as unknown as Question[]);
+        } else {
+          const localStored = localStorage.getItem('examvault_questions');
+          if (localStored) {
+            try {
+              setQuestions(JSON.parse(localStored));
+            } catch {
+              setQuestions(INITIAL_SEED_QUESTIONS);
+            }
+          } else {
+            setQuestions(INITIAL_SEED_QUESTIONS);
+            localStorage.setItem('examvault_questions', JSON.stringify(INITIAL_SEED_QUESTIONS));
+          }
         }
       } catch (err) {
-        console.error('Error loading questions:', err);
+        console.error('Error loading questions, using seed data:', err);
+        setQuestions(INITIAL_SEED_QUESTIONS);
       } finally {
         setLoading(false);
       }

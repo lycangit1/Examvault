@@ -20,15 +20,18 @@ import { Question, ExamPackage } from '../../types';
 import { PackageStatusBadge, QuestionStatusBadge } from '../../components/common/Badge';
 import { WatermarkOverlay } from '../../components/common/WatermarkOverlay';
 
+import { INITIAL_SEED_QUESTIONS, INITIAL_SEED_PACKAGES } from '../../lib/mockData';
+
 export const ApproverDashboard: React.FC = () => {
   const { user, session } = useAuth();
 
-  const [approvedQuestions, setApprovedQuestions] = useState<Question[]>([]);
-  const [packages, setPackages] = useState<ExamPackage[]>([]);
-  const [selectedQuestionIds, setSelectedQuestionIds] = useState<string[]>([]);
+  const initialApproved = INITIAL_SEED_QUESTIONS.filter(q => q.status === 'APPROVED');
+  const [approvedQuestions, setApprovedQuestions] = useState<Question[]>(initialApproved);
+  const [packages, setPackages] = useState<ExamPackage[]>(INITIAL_SEED_PACKAGES);
+  const [selectedQuestionIds, setSelectedQuestionIds] = useState<string[]>(initialApproved.slice(0, 2).map(q => q.id));
   const [examName, setExamName] = useState('Physics Mock Examination');
   const [packageName, setPackageName] = useState('PHY-2026-SET-A');
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [statusMsg, setStatusMsg] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
@@ -38,28 +41,45 @@ export const ApproverDashboard: React.FC = () => {
 
   const loadData = async () => {
     try {
-      setLoading(true);
       const { data: qData } = await supabase
         .from('questions')
         .select('*')
         .eq('status', 'APPROVED');
 
-      if (qData) {
+      if (qData && qData.length > 0) {
         const approvedList = qData as Question[];
         setApprovedQuestions(approvedList);
         setSelectedQuestionIds(prev => {
           const validSelected = prev.filter(id => approvedList.some(q => q.id === id));
           return validSelected.length > 0 ? validSelected : approvedList.slice(0, 2).map(q => q.id);
         });
+      } else {
+        const approvedList = INITIAL_SEED_QUESTIONS.filter(q => q.status === 'APPROVED');
+        setApprovedQuestions(approvedList);
       }
 
       const { data: pData } = await supabase
         .from('exam_packages')
         .select('*')
         .order('created_at', { ascending: false });
-      if (pData) setPackages(pData as ExamPackage[]);
+      if (pData && pData.length > 0) {
+        setPackages(pData as ExamPackage[]);
+      } else {
+        const storedPackages = localStorage.getItem('examvault_packages');
+        if (storedPackages) {
+          try {
+            setPackages(JSON.parse(storedPackages));
+          } catch {
+            setPackages(INITIAL_SEED_PACKAGES);
+          }
+        } else {
+          setPackages(INITIAL_SEED_PACKAGES);
+        }
+      }
     } catch (err) {
-      console.error('Failed to load package assembly data:', err);
+      console.error('Failed to load package assembly data, using seed data:', err);
+      setApprovedQuestions(INITIAL_SEED_QUESTIONS.filter(q => q.status === 'APPROVED'));
+      setPackages(INITIAL_SEED_PACKAGES);
     } finally {
       setLoading(false);
     }
