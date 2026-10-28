@@ -143,7 +143,7 @@ export const QuestionDetail: React.FC = () => {
           <div className="space-y-1">
             <div className="flex items-center gap-2.5">
               <span className="text-lg font-bold text-[#00236f] font-mono">{question.id}</span>
-              <QuestionStatusBadge status={question.status} />
+              <QuestionStatusBadge status={question.status} forSetter />
               <span className="px-2 py-0.5 bg-slate-100 rounded text-[11px] font-mono text-slate-600 border border-slate-200">
                 v{question.current_version}
               </span>
@@ -157,6 +157,18 @@ export const QuestionDetail: React.FC = () => {
             <div>Last Modified: {new Date(question.updated_at).toLocaleString()}</div>
           </div>
         </div>
+
+        {question.status === 'NEEDS_REVISION' && (
+          <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg text-xs space-y-1 relative z-10">
+            <div className="font-bold text-amber-900 flex items-center gap-1.5">
+              <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
+              <span>Revision Required by Moderation Committee</span>
+            </div>
+            <p className="text-amber-800 leading-relaxed">
+              {reviews[0]?.comment || 'Moderator requested revisions. Click "Edit Draft" in the top bar to update the question statement or options and re-submit.'}
+            </p>
+          </div>
+        )}
 
         {/* Question Statement */}
         <div className="space-y-2">

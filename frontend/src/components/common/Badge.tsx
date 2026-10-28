@@ -27,7 +27,18 @@ export const Badge: React.FC<BadgeProps> = ({ children, variant = 'default', siz
   );
 };
 
-export const QuestionStatusBadge: React.FC<{ status: QuestionStatus }> = ({ status }) => {
+export const QuestionStatusBadge: React.FC<{ status: QuestionStatus; forSetter?: boolean }> = ({ status, forSetter = false }) => {
+  if (forSetter) {
+    if (status === 'NEEDS_REVISION') {
+      return <Badge variant="warning">Needs Revision</Badge>;
+    }
+    if (status === 'DRAFT') {
+      return <Badge variant="default">Draft</Badge>;
+    }
+    // Zero-knowledge principle: Setter never knows whether an item was approved or rejected
+    return <Badge variant="info">Submitted</Badge>;
+  }
+
   switch (status) {
     case 'APPROVED':
       return <Badge variant="success">Approved</Badge>;

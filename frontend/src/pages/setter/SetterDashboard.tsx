@@ -50,9 +50,8 @@ export const SetterDashboard: React.FC = () => {
   }, [user]);
 
   const draftCount = questions.filter((q) => q.status === 'DRAFT').length;
-  const underReviewCount = questions.filter((q) => q.status === 'UNDER_REVIEW').length;
   const revisionCount = questions.filter((q) => q.status === 'NEEDS_REVISION').length;
-  const approvedCount = questions.filter((q) => q.status === 'APPROVED').length;
+  const submittedCount = questions.filter((q) => q.status !== 'DRAFT' && q.status !== 'NEEDS_REVISION').length;
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
@@ -79,7 +78,7 @@ export const SetterDashboard: React.FC = () => {
         </Link>
       </GlowCard>
 
-      {/* Metrics Row (4 Bento-style Spotlight Cards) */}
+      {/* Metrics Row (4 Bento-style Spotlight Cards - Blinded Moderation Pipeline) */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <GlowCard glowColor="blue" className="p-4 flex flex-col justify-between">
           <div className="flex justify-between items-start mb-3">
@@ -92,17 +91,6 @@ export const SetterDashboard: React.FC = () => {
           </div>
         </GlowCard>
 
-        <GlowCard glowColor="blue" className="p-4 flex flex-col justify-between">
-          <div className="flex justify-between items-start mb-3">
-            <span className="text-[11px] font-semibold text-blue-600 uppercase tracking-wide">In Moderation</span>
-            <Clock className="w-4 h-4 text-blue-600" />
-          </div>
-          <div>
-            <div className="text-2xl font-bold text-slate-900">{underReviewCount}</div>
-            <div className="text-[11px] text-slate-400 mt-0.5">Assigned to reviewer</div>
-          </div>
-        </GlowCard>
-
         <GlowCard glowColor="amber" className="p-4 flex flex-col justify-between">
           <div className="flex justify-between items-start mb-3">
             <span className="text-[11px] font-semibold text-amber-600 uppercase tracking-wide">Needs Revision</span>
@@ -110,18 +98,29 @@ export const SetterDashboard: React.FC = () => {
           </div>
           <div>
             <div className="text-2xl font-bold text-slate-900">{revisionCount}</div>
-            <div className="text-[11px] text-slate-400 mt-0.5">Feedback received</div>
+            <div className="text-[11px] text-amber-600 font-medium mt-0.5">Requires your action</div>
           </div>
         </GlowCard>
 
-        <GlowCard glowColor="emerald" className="p-4 flex flex-col justify-between">
+        <GlowCard glowColor="blue" className="p-4 flex flex-col justify-between">
           <div className="flex justify-between items-start mb-3">
-            <span className="text-[11px] font-semibold text-emerald-600 uppercase tracking-wide">Approved Items</span>
-            <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+            <span className="text-[11px] font-semibold text-blue-600 uppercase tracking-wide">In Moderation</span>
+            <Clock className="w-4 h-4 text-blue-600" />
           </div>
           <div>
-            <div className="text-2xl font-bold text-slate-900">{approvedCount}</div>
-            <div className="text-[11px] text-slate-400 mt-0.5">Ready for package lock</div>
+            <div className="text-2xl font-bold text-slate-900">{submittedCount}</div>
+            <div className="text-[11px] text-slate-400 mt-0.5">Under blind review</div>
+          </div>
+        </GlowCard>
+
+        <GlowCard glowColor="purple" className="p-4 flex flex-col justify-between">
+          <div className="flex justify-between items-start mb-3">
+            <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wide">Total Authored</span>
+            <Layers className="w-4 h-4 text-indigo-500" />
+          </div>
+          <div>
+            <div className="text-2xl font-bold text-slate-900">{questions.length}</div>
+            <div className="text-[11px] text-slate-400 mt-0.5">Total inventory items</div>
           </div>
         </GlowCard>
       </div>
@@ -171,7 +170,7 @@ export const SetterDashboard: React.FC = () => {
                       </span>
                     </td>
                     <td className="p-3.5">
-                      <QuestionStatusBadge status={q.status} />
+                      <QuestionStatusBadge status={q.status} forSetter />
                     </td>
                     <td className="p-3.5 text-xs text-slate-500 font-mono">
                       {new Date(q.updated_at || q.created_at).toLocaleDateString()}
