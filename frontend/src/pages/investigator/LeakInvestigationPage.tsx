@@ -65,10 +65,24 @@ export const LeakInvestigationPage: React.FC = () => {
     setError('');
 
     try {
-      const worker = await createWorker('eng');
-      setOcrProgress(40);
+      let worker;
+      try {
+        worker = await createWorker('eng', 1, {
+          langPath: window.location.origin,
+          logger: (m) => {
+            if (m.status === 'recognizing text' && typeof m.progress === 'number') {
+              setOcrProgress(Math.round(40 + m.progress * 40));
+            }
+          }
+        });
+      } catch (workerInitErr) {
+        console.warn('Local OCR worker failed, falling back to CDN:', workerInitErr);
+        worker = await createWorker('eng');
+      }
+
+      setOcrProgress(50);
       const ret = await worker.recognize(file);
-      setOcrProgress(80);
+      setOcrProgress(85);
       await worker.terminate();
 
       const rawText = ret.data.text || '';
