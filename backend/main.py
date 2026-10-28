@@ -12,6 +12,17 @@ from backend.routers.leaks import router as leaks_router
 # 1. Create database schema tables via SQLAlchemy ORM
 Base.metadata.create_all(bind=engine)
 
+# Auto-seed initial demo accounts and questions if database is empty
+try:
+    from backend.database import SessionLocal
+    from backend.routers.auth import seed_demo_users_if_empty
+    from backend.routers.questions import seed_demo_questions_if_empty
+    with SessionLocal() as _db:
+        seed_demo_users_if_empty(_db)
+        seed_demo_questions_if_empty(_db)
+except Exception:
+    pass
+
 # 2. Initialize FastAPI application with OpenAPI metadata
 app = FastAPI(
     title="ExamVault Hardened Core API",

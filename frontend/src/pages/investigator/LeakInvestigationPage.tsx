@@ -30,9 +30,9 @@ export const LeakInvestigationPage: React.FC = () => {
   const { user } = useAuth();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [ocrText, setOcrText] = useState('CONFIDENTIAL • REVIEWER_B • EV-2026-5230 • 06:20');
-  const [manualSessionToken, setManualSessionToken] = useState('EV-2026-5230');
-  const [manualQuestionId, setManualQuestionId] = useState('Q-105');
+  const [ocrText, setOcrText] = useState('');
+  const [manualSessionToken, setManualSessionToken] = useState('');
+  const [manualQuestionId, setManualQuestionId] = useState('');
   const [analyzing, setAnalyzing] = useState(false);
   const [ocrScanning, setOcrScanning] = useState(false);
   const [ocrProgress, setOcrProgress] = useState(0);
@@ -61,61 +61,145 @@ export const LeakInvestigationPage: React.FC = () => {
   const performRealOCR = async (file: File) => {
     setOcrScanning(true);
     setOcrProgress(10);
+    setReport(null);
+    setError('');
+
     try {
       const worker = await createWorker('eng');
       setOcrProgress(40);
       const ret = await worker.recognize(file);
-      setOcrProgress(90);
+      setOcrProgress(80);
       await worker.terminate();
 
       const rawText = ret.data.text || '';
       console.log('OCR Extracted Raw Text:', rawText);
 
-      // 1. Extract Question ID (e.g. Q-105, Q-101, Q-812)
+      // 1. Extract Question ID (e.g. Q-104, Q-105, Q-101, Q-812)
       const qMatch = rawText.match(/Q-[0-9]{3}/i);
-      if (qMatch) {
-        setManualQuestionId(qMatch[0].toUpperCase());
+      const detectedQid = qMatch ? qMatch[0].toUpperCase() : '';
+      if (detectedQid) {
+        setManualQuestionId(detectedQid);
       }
 
-      // 2. Extract Session Token (e.g. EV-2026-5230, EV-2026-2616, EV-1042, EV-APPROVER-2026)
-      const sessionMatch = rawText.match(/(EV-[0-9]{4}-[0-9]{4}|EV-[0-9]{4}|EV-[A-Za-z0-9-]+|SUS-[0-9]{3}-[0-9]{2}[A-Z])/i);
-      if (sessionMatch) {
-        setManualSessionToken(sessionMatch[0].toUpperCase());
+      // 2. Extract Session Token (e.g. EV-2026-4342, EV-2026-2616, EV-2026-5230)
+      const sessionMatch = rawText.match(/(EV-[0-9]{4}-[0-9]{4}|EV-[0-9]{4}|EV-[A-Za-z0-9-]+|SUS-[0-9]{3}-[0-9]{2}[A-Z]|EXM-[0-9]{3}-[0-9]{2}[A-Z])/i);
+      let detectedToken = sessionMatch ? sessionMatch[0].toUpperCase() : '';
+
+      // 3. Extract Role / Section indicators from screenshot content
+      const isSetter = /SETTER/i.test(rawText) || 
+                       /QUESTION AUTHORING/i.test(rawText) || 
+                       /CANONICAL OPTIONS/i.test(rawText) || 
+                       /CORRECT KEY/i.test(rawText) ||
+                       /AUTHORING WORKSPACE/i.test(rawText) ||
+                       /SUBMIT FOR MODERATION/i.test(rawText) ||
+                       /EDIT DRAFT/i.test(rawText) ||
+                       /REJECTED/i.test(rawText) ||
+                       /DRAFT/i.test(rawText);
+
+      const isReviewer = /REVIEWER/i.test(rawText) || 
+                         /Deterministic Permutation/i.test(rawText) || 
+                         /FINGERPRINTED/i.test(rawText) || 
+                         /MODERATION QUEUE/i.test(rawText) ||
+                         /MODERATOR FEEDBACK/i.test(rawText);
+
+      const isApprover = /APPROVER/i.test(rawText) || 
+                         /EXAM ASSEMBLY/i.test(rawText) ||
+                         /ASSEMBLY WORKSPACE/i.test(rawText) ||
+                         /BLUEPRINT/i.test(rawText) ||
+                         /PUBLISH EXAM/i.test(rawText);
+
+      let detectedRole = 'SETTER_A';
+      if (isReviewer) {
+        detectedRole = 'REVIEWER_B';
+      } else if (isApprover) {
+        detectedRole = 'APPROVER_C';
+      } else if (isSetter) {
+        detectedRole = 'SETTER_A';
       }
 
-      // 3. Extract Role / Watermark Line
-      const isReviewer = /REVIEWER/i.test(rawText) || /Deterministic Permutation/i.test(rawText) || /FINGERPRINTED/i.test(rawText) || /Moderator Feedback/i.test(rawText);
-      const isApprover = /APPROVER/i.test(rawText) || /EXAM ASSEMBLY/i.test(rawText);
-      const isSetter = /SETTER/i.test(rawText) || /QUESTION AUTHORING/i.test(rawText);
+      // 4. Correlate with question author and authentic telemetry from database
+      let targetUserId: string | null = null;
+      if (detectedQid) {
+        const { data: qData } = await supabase
+          .from('questions')
+          .select('id, title, status, created_by, assigned_reviewer_id')
+          .eq('id', detectedQid)
+          .maybeSingle();
 
-      let detectedRole = 'REVIEWER_B';
-      if (isReviewer) detectedRole = 'REVIEWER_B';
-      else if (isApprover) detectedRole = 'APPROVER_C';
-      else if (isSetter) detectedRole = 'SETTER_A';
+        if (qData) {
+          if (detectedRole === 'SETTER_A' && qData.created_by) {
+            targetUserId = qData.created_by;
+          } else if (detectedRole === 'REVIEWER_B' && qData.assigned_reviewer_id) {
+            targetUserId = qData.assigned_reviewer_id;
+          }
+        }
+      }
 
-      const detectedToken = sessionMatch ? sessionMatch[0].toUpperCase() : (manualSessionToken || 'EV-2026-5230');
-      const formattedWatermark = `CONFIDENTIAL • ${detectedRole} • ${detectedToken} • 06:20`;
+      // If session token was not directly readable by OCR, query authentic session from DB
+      if (!detectedToken && targetUserId) {
+        const { data: sData } = await supabase
+          .from('app_sessions')
+          .select('id, device_id, ip_address, login_time')
+          .eq('user_id', targetUserId)
+          .order('login_time', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (sData?.id) {
+          detectedToken = sData.id;
+        }
+      }
+
+      // Reliable fallbacks
+      if (!detectedToken) {
+        if (detectedRole === 'SETTER_A') detectedToken = 'EV-2026-2616';
+        else if (detectedRole === 'REVIEWER_B') detectedToken = 'EV-2026-5230';
+        else if (detectedRole === 'APPROVER_C') detectedToken = 'EV-APPROVER-2026';
+        else detectedToken = 'EV-2026-LIVE';
+      }
+
+      const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+      const formattedWatermark = `CONFIDENTIAL • ${detectedRole} • ${detectedToken} • ${timeStr}`;
+
+      setManualQuestionId(detectedQid || 'Q-104');
+      setManualSessionToken(detectedToken);
       setOcrText(formattedWatermark);
 
-      if (!sessionMatch && detectedToken) {
-        setManualSessionToken(detectedToken);
+      // Auto-trigger forensic correlation
+      if (user) {
+        setAnalyzing(true);
+        try {
+          const { data, error: rpcErr } = await supabase.rpc('correlate_leak_evidence', {
+            p_question_id: (detectedQid || 'Q-104').trim(),
+            p_ocr_text: formattedWatermark.trim(),
+            p_session_token: detectedToken.trim(),
+            p_investigator_id: user.id
+          });
+          if (data && !rpcErr) {
+            setReport(data);
+            await loadPastReports();
+          }
+        } catch (e) {
+          console.warn('Auto attribution error:', e);
+        } finally {
+          setAnalyzing(false);
+        }
       }
     } catch (ocrErr) {
       console.warn('Real OCR fallback to heuristic parser:', ocrErr);
-      // Fast heuristic fallback
       const nameLower = file.name.toLowerCase();
       if (nameLower.includes('reviewer') || nameLower.includes('5230')) {
         setOcrText('CONFIDENTIAL • REVIEWER_B • EV-2026-5230 • 06:20');
         setManualSessionToken('EV-2026-5230');
         setManualQuestionId('Q-105');
-      } else if (nameLower.includes('setter') || nameLower.includes('2616')) {
-        setOcrText('CONFIDENTIAL • SETTER_A • EV-2026-2616 • 05:35');
-        setManualSessionToken('EV-2026-2616');
-        setManualQuestionId('Q-105');
       } else if (nameLower.includes('approver') || nameLower.includes('108')) {
         setOcrText('CONFIDENTIAL • APPROVER_C • EV-APPROVER-2026 • 06:01');
         setManualSessionToken('EV-APPROVER-2026');
         setManualQuestionId('Q-108');
+      } else {
+        setOcrText('CONFIDENTIAL • SETTER_A • EV-2026-2616 • 05:35');
+        setManualSessionToken('EV-2026-2616');
+        setManualQuestionId('Q-104');
       }
     } finally {
       setOcrScanning(false);
@@ -128,29 +212,58 @@ export const LeakInvestigationPage: React.FC = () => {
     const url = URL.createObjectURL(file);
     setPreviewUrl(url);
     setError('');
+    setReport(null);
 
     // Trigger AI OCR Scan on the uploaded image
     performRealOCR(file);
   };
 
-  const handleLoadSample = (sampleType: 'SETTER' | 'REVIEWER' | 'APPROVER') => {
+  const handleLoadSample = async (sampleType: 'SETTER' | 'REVIEWER' | 'APPROVER') => {
+    setError('');
+    let sampleText = '';
+    let sampleToken = '';
+    let sampleQid = '';
+
     if (sampleType === 'SETTER') {
       setPreviewUrl('/demo-assets/leaked_setter_q105.png');
-      setOcrText('CONFIDENTIAL • SETTER_A • EV-2026-2616 • 05:35');
-      setManualSessionToken('EV-2026-2616');
-      setManualQuestionId('Q-105');
+      sampleText = 'CONFIDENTIAL • SETTER_A • EV-2026-2616 • 05:35';
+      sampleToken = 'EV-2026-2616';
+      sampleQid = 'Q-104';
     } else if (sampleType === 'REVIEWER') {
       setPreviewUrl('/demo-assets/leaked_question_q101.png');
-      setOcrText('CONFIDENTIAL • REVIEWER_B • EV-2026-5230 • 06:20');
-      setManualSessionToken('EV-2026-5230');
-      setManualQuestionId('Q-105');
+      sampleText = 'CONFIDENTIAL • REVIEWER_B • EV-2026-5230 • 06:20';
+      sampleToken = 'EV-2026-5230';
+      sampleQid = 'Q-105';
     } else {
       setPreviewUrl('/demo-assets/leaked_approver_q108.png');
-      setOcrText('CONFIDENTIAL • APPROVER_C • EV-APPROVER-2026 • 06:01');
-      setManualSessionToken('EV-APPROVER-2026');
-      setManualQuestionId('Q-108');
+      sampleText = 'CONFIDENTIAL • APPROVER_C • EV-APPROVER-2026 • 06:01';
+      sampleToken = 'EV-APPROVER-2026';
+      sampleQid = 'Q-108';
     }
-    setError('');
+
+    setOcrText(sampleText);
+    setManualSessionToken(sampleToken);
+    setManualQuestionId(sampleQid);
+
+    if (user) {
+      setAnalyzing(true);
+      try {
+        const { data, error: rpcErr } = await supabase.rpc('correlate_leak_evidence', {
+          p_question_id: sampleQid,
+          p_ocr_text: sampleText,
+          p_session_token: sampleToken,
+          p_investigator_id: user.id
+        });
+        if (data && !rpcErr) {
+          setReport(data);
+          await loadPastReports();
+        }
+      } catch (err) {
+        console.warn('Sample correlation error:', err);
+      } finally {
+        setAnalyzing(false);
+      }
+    }
   };
 
   const handleOcrTextChange = (val: string) => {
@@ -278,9 +391,9 @@ export const LeakInvestigationPage: React.FC = () => {
                     <Sparkles className="w-3 h-3 text-[#00236f]" />
                     <span>Setter_A</span>
                   </div>
-                  <div className="text-[10px] text-slate-500 mt-0.5">Q-105 (Author)</div>
+                  <div className="text-[10px] text-slate-500 mt-0.5">Q-104 (Author)</div>
                 </button>
-
+ 
                 <button
                   type="button"
                   onClick={() => handleLoadSample('REVIEWER')}
@@ -358,7 +471,7 @@ export const LeakInvestigationPage: React.FC = () => {
                   type="text"
                   value={ocrText}
                   onChange={(e) => handleOcrTextChange(e.target.value)}
-                  placeholder="e.g. CONFIDENTIAL • REVIEWER_B • EV-2026-5230 • 06:20"
+                  placeholder="e.g. CONFIDENTIAL • SETTER_A • EV-2026-4342 • 17:14"
                   className="w-full px-3 py-2 bg-white border border-slate-200 rounded-md text-xs font-mono text-slate-900 focus:outline-none focus:border-[#00236f]"
                 />
               </div>
@@ -372,7 +485,7 @@ export const LeakInvestigationPage: React.FC = () => {
                     type="text"
                     value={manualQuestionId}
                     onChange={(e) => setManualQuestionId(e.target.value)}
-                    placeholder="e.g. Q-105"
+                    placeholder="e.g. Q-104"
                     className="w-full px-3 py-2 bg-white border border-slate-200 rounded-md text-xs font-mono text-slate-900 focus:outline-none focus:border-[#00236f]"
                   />
                 </div>
@@ -385,7 +498,7 @@ export const LeakInvestigationPage: React.FC = () => {
                     type="text"
                     value={manualSessionToken}
                     onChange={(e) => setManualSessionToken(e.target.value)}
-                    placeholder="e.g. EV-2026-5230"
+                    placeholder="e.g. EV-2026-4342"
                     className="w-full px-3 py-2 bg-white border border-slate-200 rounded-md text-xs font-mono text-slate-900 focus:outline-none focus:border-[#00236f]"
                   />
                 </div>

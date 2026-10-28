@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { ArrowLeft, CheckCircle2, XCircle, AlertCircle, Shield, Loader2, MessageSquare, Fingerprint } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
@@ -20,6 +20,7 @@ export const QuestionReview: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const recordedQuestionIdRef = useRef<string | null>(null);
 
   useEffect(() => {
     async function loadAndAuditQuestion() {
@@ -40,18 +41,10 @@ export const QuestionReview: React.FC = () => {
             setQuestion(fallbackQ);
           }
         }
-
-        // Trigger tamper-evident audit log & velocity anomaly monitoring
-        if (session?.id) {
-          await recordQuestionView(questionId);
-        }
       } catch (err: any) {
         const fallbackQ = INITIAL_SEED_QUESTIONS.find(q => q.id === questionId);
         if (fallbackQ) {
           setQuestion(fallbackQ);
-          if (session?.id) {
-            await recordQuestionView(questionId);
-          }
         } else {
           setError(err.message || 'Failed to load question');
         }
@@ -61,7 +54,12 @@ export const QuestionReview: React.FC = () => {
     }
 
     loadAndAuditQuestion();
-  }, [questionId, user, session]);
+
+    if (questionId && recordedQuestionIdRef.current !== questionId) {
+      recordedQuestionIdRef.current = questionId;
+      recordQuestionView(questionId);
+    }
+  }, [questionId, user?.id]);
 
   const handleDecision = async (decision: ReviewDecision) => {
     if (!question || !user || !session) return;

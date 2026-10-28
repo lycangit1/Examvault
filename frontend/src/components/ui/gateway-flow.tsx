@@ -15,7 +15,7 @@ export interface GatewayFlowProps {
 
 export default function GatewayFlow({
   mode = "light",
-  speed = 1,
+  speed = 0.5,
   size = 1,
   density = 1,
   strokeWidth = 1.2,
@@ -159,7 +159,7 @@ export default function GatewayFlow({
         ctx.strokeStyle = grad;
         ctx.lineWidth = strokeWidth;
         ctx.setLineDash([3, 7]);
-        ctx.lineDashOffset = -time * 18 * path.speedMult;
+        ctx.lineDashOffset = -time * 11 * path.speedMult;
         ctx.stroke();
         ctx.setLineDash([]);
 

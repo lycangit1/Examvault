@@ -21,6 +21,74 @@ def require_active_session(current_user: dict = Depends(get_current_user)):
     session_tracker.validate_session_active(session_id)
     return current_user
 
+def seed_demo_questions_if_empty(db: Session):
+    """
+    Seeds initial encrypted demonstration questions if the questions table is empty.
+    """
+    if db.query(Question).count() == 0:
+        now = datetime.now(timezone.utc)
+        demo_qs = [
+            Question(
+                id="Q-108",
+                author_id="11111111-1111-1111-1111-111111111111",
+                subject="Physics",
+                topic="Wave Optics",
+                difficulty="HARD",
+                question_text=encrypt_field("In a Young double slit experiment, if slit separation is halved and screen distance is doubled, what is the change in fringe width?"),
+                options=[
+                    "Fringe width remains unchanged",
+                    "Fringe width becomes 4 times original value",
+                    "Fringe width is halved",
+                    "Fringe width is doubled"
+                ],
+                correct_answer=encrypt_field("Fringe width becomes 4 times original value"),
+                status="APPROVED",
+                version=1,
+                created_at=now,
+                updated_at=now
+            ),
+            Question(
+                id="Q-103",
+                author_id="11111111-1111-1111-1111-111111111111",
+                subject="Physics",
+                topic="Electromagnetic Induction",
+                difficulty="MEDIUM",
+                question_text=encrypt_field("When a north pole of a bar magnet moves into a stationary coil, what is the direction of induced current viewed from the approaching side?"),
+                options=[
+                    "Clockwise direction",
+                    "Anti-clockwise direction",
+                    "Zero induced current",
+                    "Alternating without steady direction"
+                ],
+                correct_answer=encrypt_field("Anti-clockwise direction"),
+                status="APPROVED",
+                version=1,
+                created_at=now,
+                updated_at=now
+            ),
+            Question(
+                id="Q-101",
+                author_id="11111111-1111-1111-1111-111111111111",
+                subject="Physics",
+                topic="Kinematics",
+                difficulty="EASY",
+                question_text=encrypt_field("A car increases its velocity from 10 m/s to 30 m/s in 5 seconds with uniform acceleration. What is its displacement during this period?"),
+                options=[
+                    "50 meters",
+                    "100 meters",
+                    "150 meters",
+                    "200 meters"
+                ],
+                correct_answer=encrypt_field("100 meters"),
+                status="APPROVED",
+                version=1,
+                created_at=now,
+                updated_at=now
+            ),
+        ]
+        db.add_all(demo_qs)
+        db.commit()
+
 @router.post("/", response_model=QuestionResponse, status_code=status.HTTP_201_CREATED)
 def create_question(
     q_in: QuestionCreateRequest,

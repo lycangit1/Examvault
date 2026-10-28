@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft, Edit3, Send, History, CheckCircle2, Clock, AlertTriangle, FileText, User, ShieldAlert, Shield } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
@@ -17,6 +17,7 @@ export const QuestionDetail: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [msg, setMsg] = useState('');
+  const recordedQuestionIdRef = useRef<string | null>(null);
 
   const loadData = async () => {
     if (!questionId) return;
@@ -42,10 +43,6 @@ export const QuestionDetail: React.FC = () => {
         .eq('question_id', questionId)
         .order('created_at', { ascending: false });
       if (rData) setReviews(rData as Review[]);
-
-      if (session?.id && questionId) {
-        await recordQuestionView(questionId);
-      }
     } catch (err) {
       console.error('Failed to load question details:', err);
     } finally {
@@ -55,7 +52,11 @@ export const QuestionDetail: React.FC = () => {
 
   useEffect(() => {
     loadData();
-  }, [questionId, session]);
+    if (questionId && recordedQuestionIdRef.current !== questionId) {
+      recordedQuestionIdRef.current = questionId;
+      recordQuestionView(questionId);
+    }
+  }, [questionId]);
 
   const handleSubmitForReview = async () => {
     if (!question || !user) return;

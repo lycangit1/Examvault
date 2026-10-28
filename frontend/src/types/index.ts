@@ -144,6 +144,9 @@ export interface AppSession {
   risk_reasons: RiskReason[];
   risk_events?: RiskEvent[];
   status: SessionStatus;
+  suspended_at?: string;
+  reinstated_at?: string;
+  admin_reinstatement_note?: string;
   user?: Profile;
 }
 

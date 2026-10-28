@@ -134,7 +134,7 @@ export const LoginPage: React.FC = () => {
       {/* Dynamic Edge-to-Edge Gateway Flow Background */}
       <GatewayFlow
         mode="light"
-        speed={0.9}
+        speed={0.42}
         density={1.0}
         strokeWidth={1.2}
         opacity={0.85}

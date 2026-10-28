@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
-import { AppRole, Profile, AppSession, DeviceMatchStatus, SystemLockdownState, RiskLevel } from '../types';
+import { AppRole, Profile, AppSession, DeviceMatchStatus, SystemLockdownState, RiskLevel, SuspensionReview } from '../types';
 
 interface AuthContextType {
   user: Profile | null;
@@ -342,6 +342,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setSession(appSess);
             localStorage.setItem('examvault_session_obj', JSON.stringify(appSess));
           }
+          recentViewsRef.current = [];
           setSuspendedNotice(null);
           localStorage.setItem('examvault_user_id', loginPendingUser.id);
           localStorage.setItem('examvault_session_id', verifyRes.session_id);
@@ -376,6 +377,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         setUser(loginPendingUser);
         setSession(fallbackSess);
+        recentViewsRef.current = [];
         setSuspendedNotice(null);
         localStorage.setItem('examvault_user_id', loginPendingUser.id);
         localStorage.setItem('examvault_session_id', fallbackSessionId);
@@ -415,6 +417,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch {
       // Ignore offline error
     } finally {
+      recentViewsRef.current = [];
       setUser(null);
       setSession(null);
       setLoginPendingUser(null);
@@ -447,20 +450,116 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const persistSuspendedSession = async (
+    suspendedSession: AppSession,
+    finalScore: number,
+    reasonMessage: string
+  ) => {
+    const nowIso = new Date().toISOString();
+    const reviewId = `rev-${Date.now()}-${Math.floor(100 + Math.random() * 900)}`;
+
+    const contributingEvents = (suspendedSession.risk_reasons && suspendedSession.risk_reasons.length > 0)
+      ? suspendedSession.risk_reasons.map((r: any) => ({
+          rule_name: r.rule_name || (r.signal_label?.includes('Rapid') ? 'RAPID_QUESTION_ACCESS' : 'UNKNOWN_DEVICE'),
+          points: r.points || 35,
+          reason: r.reason || r.signal_label || reasonMessage,
+          timestamp: nowIso
+        }))
+      : [
+          {
+            rule_name: 'RAPID_QUESTION_ACCESS',
+            points: 35,
+            reason: reasonMessage,
+            timestamp: nowIso
+          }
+        ];
+
+    const newReview: SuspensionReview = {
+      id: reviewId,
+      session_id: suspendedSession.id,
+      user_id: user?.id || suspendedSession.user_id,
+      suspended_at: nowIso,
+      risk_score_at_suspension: finalScore,
+      contributing_risk_events: contributingEvents,
+      status: 'PENDING',
+      created_at: nowIso,
+      user: user || undefined
+    };
+
+    // 1. Persist locally to localStorage so Investigator queue immediately displays it
+    try {
+      const storedReviewsStr = localStorage.getItem('examvault_suspension_reviews');
+      const existingReviews: SuspensionReview[] = storedReviewsStr ? JSON.parse(storedReviewsStr) : [];
+      const filtered = existingReviews.filter(r => r.session_id !== suspendedSession.id);
+      localStorage.setItem('examvault_suspension_reviews', JSON.stringify([newReview, ...filtered]));
+
+      const storedSessStr = localStorage.getItem('examvault_all_sessions');
+      const existingSess: AppSession[] = storedSessStr ? JSON.parse(storedSessStr) : [];
+      const updatedSessObj: AppSession = {
+        ...suspendedSession,
+        status: 'SUSPENDED',
+        risk_score: finalScore,
+        risk_level: 'HIGH_RISK',
+        suspended_at: nowIso
+      };
+      const filteredSess = existingSess.filter(s => s.id !== suspendedSession.id);
+      localStorage.setItem('examvault_all_sessions', JSON.stringify([updatedSessObj, ...filteredSess]));
+    } catch (e) {
+      console.error('Failed to save suspension review locally:', e);
+    }
+
+    // 2. Sync to Supabase
+    try {
+      await supabase.from('app_sessions').upsert({
+        id: suspendedSession.id,
+        user_id: user?.id || suspendedSession.user_id,
+        device_id: suspendedSession.device_id,
+        device_match_status: suspendedSession.device_match_status,
+        status: 'SUSPENDED',
+        risk_score: finalScore,
+        risk_level: 'HIGH_RISK',
+        suspended_at: nowIso
+      });
+
+      await supabase.from('suspension_reviews').insert({
+        id: reviewId,
+        session_id: suspendedSession.id,
+        user_id: user?.id || suspendedSession.user_id,
+        suspended_at: nowIso,
+        risk_score_at_suspension: finalScore,
+        contributing_risk_events: contributingEvents,
+        status: 'PENDING',
+        created_at: nowIso
+      });
+    } catch (err) {
+      console.warn('Could not sync suspension to Supabase (offline/demo fallback):', err);
+    }
+  };
+
   const recentViewsRef = useRef<{ questionId: string; timestamp: number }[]>([]);
 
   const recordQuestionView = async (questionId: string) => {
-    if (!session) return;
+    if (!session || !questionId) return;
 
     const now = Date.now();
-    // Rolling 60-second window
-    const updatedViews = [...recentViewsRef.current.filter(v => now - v.timestamp < 60000), { questionId, timestamp: now }];
+
+    // 1. Debounce: if this exact question was already recorded within the last 5 seconds, ignore
+    const wasRecentlyRecorded = recentViewsRef.current.some(
+      v => v.questionId === questionId && (now - v.timestamp < 5000)
+    );
+    if (wasRecentlyRecorded) {
+      return;
+    }
+
+    // 2. Maintain a rolling 60-second window
+    const validViews = recentViewsRef.current.filter(v => now - v.timestamp < 60000);
+    const updatedViews = [...validViews, { questionId, timestamp: now }];
     recentViewsRef.current = updatedViews;
 
     let remoteSuspended = false;
     let remoteScore = 0;
 
-    // 1. Try Supabase RPC
+    // 3. Try Supabase RPC if available
     try {
       const { data, error } = await supabase.rpc('record_question_view', {
         p_question_id: questionId,
@@ -476,29 +575,42 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // offline fallback
     }
 
-    // 2. Client-side Real-time Anomaly Evaluation
-    const rapidViewsCount = updatedViews.length;
+    // 4. Client-side Real-time Anomaly Evaluation:
+    // Count distinct questions viewed in the rolling 60-second window
+    const distinctQuestionIds = new Set(updatedViews.map(v => v.questionId));
+    const distinctCount = distinctQuestionIds.size;
     let calculatedScore = Math.max(session.risk_score || 0, remoteScore);
     let shouldAutoSuspend = remoteSuspended;
 
-    // Trigger pacing velocity anomaly when 4+ items are viewed within 60 seconds
-    if (rapidViewsCount >= 4) {
-      if (!session.risk_reasons?.some((r: any) => r.signal_label?.includes('Rapid') || r.rule_name === 'RAPID_QUESTION_ACCESS')) {
+    // Trigger pacing velocity anomaly when 5+ distinct questions are viewed within 60 seconds
+    if (distinctCount >= 5) {
+      const alreadyHasRapid = session.risk_reasons?.some(
+        (r: any) => r.signal_label?.includes('Rapid') || r.rule_name === 'RAPID_QUESTION_ACCESS'
+      );
+      if (!alreadyHasRapid) {
         calculatedScore = Math.min(100, calculatedScore + 35);
       }
 
-      // If user is on UNKNOWN device (starts at 35 + 35 = 70) or rapid views reach 6+ views, suspend immediately
-      if (rapidViewsCount >= 6 || session.device_match_status === 'UNKNOWN' || calculatedScore >= 60) {
+      // Suspension thresholds:
+      // - 8+ distinct questions in 60s (automated scraping attempt)
+      // - UNKNOWN device + 5+ distinct questions (unrecognized hardware scraping)
+      // - Cumulative risk score >= 75
+      if (distinctCount >= 8 || (session.device_match_status === 'UNKNOWN' && distinctCount >= 5) || calculatedScore >= 75) {
         shouldAutoSuspend = true;
       }
     }
 
     if (shouldAutoSuspend) {
-      const notice = '⚠️ ANOMALY DETECTED & ACTIVE SESSION SUSPENDED: Rapid sequential question inspection velocity exceeded security threshold (4+ items in under 60 seconds). Session automatically locked for forensic investigation.';
+      const notice = '⚠️ ANOMALY DETECTED & ACTIVE SESSION SUSPENDED: Rapid sequential question inspection velocity exceeded security threshold (5+ distinct items in under 60 seconds). Session automatically locked for forensic investigation.';
       setSuspendedNotice(notice);
+
+      // Persist to local reviews and Supabase before clearing session
+      await persistSuspendedSession(session, calculatedScore, notice);
+
       localStorage.removeItem('examvault_user_id');
       localStorage.removeItem('examvault_session_id');
       localStorage.removeItem('examvault_session_obj');
+      recentViewsRef.current = [];
       setUser(null);
       setSession(null);
       window.dispatchEvent(new CustomEvent('examvault:session_expired', {
